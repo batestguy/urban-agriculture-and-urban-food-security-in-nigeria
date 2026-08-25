@@ -57,6 +57,11 @@
 - **Workaround:** Re-auth with classic PAT or new fine-grained PAT with explicit access to `urban-agriculture-and-urban-food-security-in-nigeria`. Run `gh auth login`, or `gh auth refresh` → re-select repo, or `git push` via `gh` after login. Local commit will push when auth fixed — no data loss. `git status` shows `ahead by 1`.
 - **Remote reverted to** `https://github.com/batestguy/...` (SSH host key verification also failed).
 
+## 2026-08-25 08:50 UTC — Auth FIXED, Phase 1 pushed
+- **Classic PAT `ghp_...1o8obQ` provided** → `echo ghp_... | gh auth login --with-token` → `gh auth status` now `Token: ghp_****, scopes: admin:org, repo, workflow` (classic, not fine-grained).
+- **Push:** `git -C D:\YohannaPaper push` → **PUSH_EXIT 0** — `43affb9..7baa6d4 → master`. **Local and GitHub now in sync** (`pushedAt 2026-08-25T08:00:33Z`, `ahead 0`). Both commits now remote: `22e2948` (484+1825 rows) + `7baa6d4` docs.
+- **Security:** Classic PAT stored in Windows Credential Manager via `gh` (keyring). Rotate/revoke after conference if desired at https://github.com/settings/tokens.
+
 ## Next actions (owner: batestguy) — Phase 2 → 3
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
