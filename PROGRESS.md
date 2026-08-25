@@ -52,12 +52,18 @@
 - **FAO:** `fetch_fao.py` → `http_521_stub` (521) → **1-row stub** `fao_food_security.csv` (104B) with note `replace with FAOSTAT dump in data/external/`; provenance logged. Manual FAOSTAT download fallback documented in `data/external/README.md`.
 - **Raw now:** `worldbank_ng.csv` (75) + `osm_urban_ag.csv` (484) + `nasa_power_*.csv` (1,825) + `fao_food_security.csv` (1 stub) = **~2,385 rows frozen**, all with `provenance.json` (14 entries, CC BY-4.0 / ODbL).
 
+## 2026-08-25 08:41 UTC — Phase 1 push pending (auth, data safe locally)
+- **Commit `22e2948` ready** (`OSM 484 + NASA 5×365 + FAO stub`) but **`git push` 403 `Permission denied to batestguy`** — fine-grained PAT `github_pat_11BB...` has API `push:true` but git push denied (likely PAT created before repo — no access to new repo). **Data safe on Drive D** (`D:\YohannaPaper\data/raw/` 16 files, 30KB+); GitHub is **1 commit behind** (`origin/master` at `240830d`). 
+- **Workaround:** Re-auth with classic PAT or new fine-grained PAT with explicit access to `urban-agriculture-and-urban-food-security-in-nigeria`. Run `gh auth login`, or `gh auth refresh` → re-select repo, or `git push` via `gh` after login. Local commit will push when auth fixed — no data loss. `git status` shows `ahead by 1`.
+- **Remote reverted to** `https://github.com/batestguy/...` (SSH host key verification also failed).
+
 ## Next actions (owner: batestguy) — Phase 2 → 3
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
 - [x] Phase 1b: OSM 484 rows — done
 - [x] Phase 1c: NASA POWER 5×365 — done
 - [x] Phase 1d: FAO stub — done
+- [ ] Fix auth: `gh auth login` → `git push` (when ready)
 - [ ] Phase 2: Download `data/external/gadm41_NGA_2.shp` (LGA polygons, ~100MB) — see `data/external/README.md` — **do NOT commit if >50MB**, add to `.gitignore`, keep locally
 - [ ] Phase 3: `Rscript analysis/spatial/01_clean.R → data/processed/osm_urban_ag.gpkg + worldbank_ng_wide.csv`
 
