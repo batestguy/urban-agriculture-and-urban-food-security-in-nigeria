@@ -1,0 +1,10 @@
+project:
+  type: default
+
+format:
+  docx:
+    toc: false
+    number-sections: true
+    reference-links: true
+    # Use default reference-doc, but enforce styles via metadata:
+    # Word compliance checked post-render: TNR 12pt 1.5 ≤12pp (see README.md:7)
