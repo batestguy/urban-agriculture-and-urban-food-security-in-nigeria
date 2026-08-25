@@ -1,0 +1,91 @@
+---
+title: "Urban Agriculture and Urban Food Security in Nigeria: A Spatial Statistics Perspective"
+subtitle: "Federal Polytechnic Kaltungo — 2nd Annual National Multidisciplinary Conference 2026 (Sub-theme 6: Climate-Smart Agriculture, Food Security and Rural Transformation; Secondary: 10, 13)"
+author: "Yohanna — batestguy (presenting author)"
+date: last-modified
+date-format: "D MMMM YYYY"
+abstract: |
+  **Abstract (150–300 words, ≤6 keywords — replace this placeholder).** Urban agriculture is a growing component of Nigeria’s food system, yet its spatial distribution and contribution to urban food security remain under-quantified. This paper combines spatial statistics (global Moran’s I, LISA, spatial lag/error models) with open APIs (OpenStreetMap Overpass for allotment/farmland footprints; World Bank for urban population and food production indices; NASA POWER for climate) to map urban agriculture intensity across Abuja, Lagos, Kano, Port Harcourt and Gombe and test its association with food-security outcomes at LGA level. Early frozen extracts show… [Results placeholder]. Findings suggest… [Implication for climate-smart, circular-economy and community resilience]. The manuscript follows the conference specification: MS Word, Times New Roman 12pt, 1.5 spacing, ≤12 pages.
+keywords: [urban agriculture, urban food security, spatial statistics, climate-smart agriculture, Nigeria]
+bibliography: references.bib
+format:
+  docx:
+    toc: false
+    number-sections: true
+    reference-doc: reference.docx
+---
+
+::: {style="font-family: 'Times New Roman'; font-size: 12pt; line-height: 1.5;"}
+:::
+
+# Introduction
+
+Urban agriculture in Nigerian cities — from dry-season fadama along riverbeds to rooftop and peri-urban allotments — is increasingly framed as a climate-smart lever for food security and community resilience [@faostat2024]. Yet the evidence remains fragmented.
+
+**Contribution:** This paper (i) freezes verifiable, API-sourced footprints of urban agriculture (OSM Overpass) and food-security indicators (World Bank/FAO/NASA POWER), (ii) applies spatial autocorrelation and spatial regression (`sf`/`spdep`/`terra` in R 4.5.2), and (iii) maps suitability for scaling.
+
+# Study Area and Data
+
+## Study Area
+
+Five cities stratified by agro-ecological and urban-form variation: Abuja (planned capital), Lagos (coastal megacity), Kano (Sahelian), Port Harcourt (Niger Delta), Gombe (savanna, host region).
+
+## Data (frozen via APIs, provenance in `data/raw/provenance.json`)
+
+| Layer | Source | API | Layer retained |
+|---|---|---|---|
+| Urban agriculture footprints | OSM Overpass | `https://overpass-api.de/api/interpreter` | `landuse=allotments`, `farmland`, `farmyard`, `leisure=garden` |
+| Urban population / food indices | World Bank | `https://api.worldbank.org/v2/...` | `SP.URB.TOTL`, `AG.PRD.FOOD.XD` |
+| Climate | NASA POWER | `https://power.larc.nasa.gov/api/temporal/daily/point` | Precipitation, T2M, RH2M |
+| Boundaries | GADM/HDX | — | State/LGA polygons |
+
+All pulls are one-time and frozen to `data/raw/*.csv`. Analysis reads only the frozen CSVs.
+
+# Methods
+
+## Spatial descriptive
+
+- Density (allotments km⁻²), kernel density (`spatstat`), nearest-neighbour.
+
+## Spatial dependence
+
+- Global Moran’s I (`spdep::moran.test`) and LISA (`localmoran`) on food-security indicator by LGA.
+
+## Spatial regression
+
+- Spatial lag `y = ρWy + Xβ + ε` and spatial error `y = Xβ + u, u = λWu + ε` (`spatialreg::lagsarlm`, `errorsarlm`), covariates: urban ag density, rainfall, temperature, population density. Model choice via AIC / likelihood ratio.
+
+## Suitability overlay
+
+- `terra` weighted overlay: proximity to markets, water, land availability.
+
+*Environment:* R 4.5.2 (`sf 1.1.2`, `terra 1.9.46`, `spdep 1.4.2`); Python `ds-general` (3.12) for API harvest. See `ENVIRONMENTS.md`.
+
+# Results (placeholders — replace after `analysis/spatial/` run)
+
+- Table 1: Density by city.
+- Figure 1: LISA cluster map.
+- Table 2: Moran’s I and spatial regression coefficients (with 95% CI).
+
+# Discussion
+
+Link to climate-smart agriculture (heat-island mitigation, water-use efficiency, compost circularity), GIS/urban planning (#10), and environmental sustainability/circular economy (#13).
+
+# Ethics and Reflections
+
+Data are open and attributed (OSM © OpenStreetMap contributors, World Bank CC BY-4.0, NASA POWER). No personally identifiable data. Limitations: OSM completeness varies by city; API provenance freezes mitigate reproducibility risk. Reflections per Hull Ch 3 criteria (what/why, justification, ethics, process).
+
+# Conclusion and Policy Implications
+
+Urban agriculture complements rural transformation — shortening supply chains, buffering price shocks, and building community resilience. Provide two actionable levers (e.g., allotment zoning, compost loop).
+
+# References
+
+::: {#refs}
+:::
+
+---
+
+**Formatting compliance (flyer):** Times New Roman 12pt, 1.5 spacing, ≤12 pages, MS Word. Render via `quarto render manuscript.qmd --to docx` and verify page count in Word before emailing to `fpksstconf2026@gmail.com` (abstract 5 Oct 2026, full paper 9 Oct 2026). Fees: Physical ₦13,000 / Virtual ₦10,000 / Students ₦5,000 — First Bank Plc, School Of Science Conference Fpk, 2047116096.
+
+**Reproducibility:** All numbers trace to `data/raw/provenance.json` + `scripts/fetch_*.py`.

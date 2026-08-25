@@ -1,0 +1,58 @@
+# R
+.RData
+.Rhistory
+.Rproj.user/
+.Ruserdata
+*.Rproj
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# Conda
+.conda/
+
+# Quarto / knitr
+.quarto/
+*_cache/
+*_files/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Word temp
+~$*.docx
+~$*.doc
+*.tmp
+
+# Data — keep structure but ignore large raw dumps (uncomment if needed)
+# data/raw/*.csv
+# data/raw/*.geojson
+# data/external/*.tif
+# Keep placeholders
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Secrets
+.env
+secrets.toml
+*-secret.json
