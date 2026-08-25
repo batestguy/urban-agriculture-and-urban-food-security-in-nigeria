@@ -40,12 +40,26 @@
 - **Files:** `data/raw/worldbank_ng.csv` (4,995B) + `data/raw/provenance.json` (first entry, CC BY-4.0, timestamp 2026-08-25T07:05:46Z, URLs logged). `git status` shows 2 new data files.
 - **Next:** Phase 1b OSM isolated test (`Gombe → osm_gombe_test.csv`) then 5-city full.
 
-## Next actions (owner: batestguy) — Phase 1b → 1c/d
-- [x] Phase 0: verify done (see 07:45 entry)
-- [x] Phase 1a: `worldbank_ng.csv` — done 08:05
-- [ ] Phase 1b: `python scripts/fetch_osm_urban_ag.py --city Gombe --out data/raw/osm_gombe_test.csv` (isolated test) → 5-city run
-- [ ] Phase 1c: `fetch_nasa_power.py --city Abuja/Lagos/Kano/PortHar/Gombe`
-- [ ] Phase 1d: `fetch_fao.py` (expect stub)
+## 2026-08-25 08:21–08:40 UTC — Phase 1b DONE: OSM Overpass (per-city, per-tag fix)
+- **Fix:** `scripts/fetch_osm_urban_ag.py` UnicodeEscape `C:\Users` → `r"""` + header `Content-Type` → `User-Agent` + split 4-tag union (timeout 90s, 504 busy) → per-tag `QUERY_TEMPLATES` ×4 with fallback URLs `overpass-api.de / kumi.systems / openstreetmap.fr`, dedup by `(type,id)`, `sleep 1` per tag / `sleep 2` per city.
+- **Runs:** `Gombe` test → initially 0 rows (406 then 504), after fix **45 rows** (8 tags farmland/farmyard/garden). Full isolated runs: `Abuja 32 rows` (125s), `Lagos 130 rows` (193s), `Kano 189 rows` (108s), `Port Harcourt 88 rows` (133s). **Combined** `osm_urban_ag.csv` **484 rows** (Kano 189, Lagos 130, PH 88, Gombe 45, Abuja 32) → `data/raw/osm_*.csv` per city + `osm_urban_ag.csv` (26,299B) via python concat.
+- **Distribution:** Real OSM footprints verified (e.g., Gombe `way 800586873 farmland 10.30479,11.17867`). Completeness varies (Kano highest, Abuja lowest) — document as limitation.
+- **Provenance:** Appended 5 new entries to `data/raw/provenance.json` (now ~7 OSM entries including 0-row retries + successes, ODbL). Combined file derived from per-city CSVs.
+- **Files:** `data/raw/osm_abuja.csv` (1,734B), `osm_lagos.csv` (6,959B), `osm_kano.csv` (9,859B), `osm_portharcourt.csv` (5,430B), `osm_gombe.csv` (2,505B), `osm_urban_ag.csv` (26,299B).
+
+## 2026-08-25 08:39–08:40 UTC — Phase 1c/d DONE: NASA POWER + FAO
+- **NASA POWER:** `fetch_nasa_power.py` ×5 cities (`--start 20230101 --end 20231231`, `T2M/PRECTOTCORR/RH2M`, `community=AG`) → each **365 rows daily** (9,722/9,786/9,575/9,792/9,642B) for Abuja/Lagos/Kano/PH/Gombe. Coordinates verified (Abuja 9.07N 7.39E etc.). Entries appended to `provenance.json` (5 NASA entries).
+- **FAO:** `fetch_fao.py` → `http_521_stub` (521) → **1-row stub** `fao_food_security.csv` (104B) with note `replace with FAOSTAT dump in data/external/`; provenance logged. Manual FAOSTAT download fallback documented in `data/external/README.md`.
+- **Raw now:** `worldbank_ng.csv` (75) + `osm_urban_ag.csv` (484) + `nasa_power_*.csv` (1,825) + `fao_food_security.csv` (1 stub) = **~2,385 rows frozen**, all with `provenance.json` (14 entries, CC BY-4.0 / ODbL).
+
+## Next actions (owner: batestguy) — Phase 2 → 3
+- [x] Phase 0: verify done
+- [x] Phase 1a: worldbank — done
+- [x] Phase 1b: OSM 484 rows — done
+- [x] Phase 1c: NASA POWER 5×365 — done
+- [x] Phase 1d: FAO stub — done
+- [ ] Phase 2: Download `data/external/gadm41_NGA_2.shp` (LGA polygons, ~100MB) — see `data/external/README.md` — **do NOT commit if >50MB**, add to `.gitignore`, keep locally
+- [ ] Phase 3: `Rscript analysis/spatial/01_clean.R → data/processed/osm_urban_ag.gpkg + worldbank_ng_wide.csv`
 
 ## Decisions & risks
 - Local folder stays `D:\YohannaPaper` (not renamed to spaced title); GitHub slug `urban-agriculture-and-urban-food-security-in-nigeria` is the canonical name. Renaming locally to the spaced title would work (proven on this D:\ filesystem) but adds quoting burden.

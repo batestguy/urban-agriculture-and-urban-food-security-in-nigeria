@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""
+r"""
 fetch_osm_urban_ag.py — One-time Overpass API harvest for urban agriculture footprints.
 Source: OpenStreetMap via Overpass API (attribution: OSM contributors, ODbL).
 Frozen to data/raw/osm_<city>.csv + data/raw/provenance.json
@@ -14,7 +14,12 @@ try:
 except ImportError:
     requests = None
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_URLS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
+]
+OVERPASS_URL = OVERPASS_URLS[0]
 CITIES = {
     "Abuja": (8.90, 7.15, 9.25, 7.65),       # approx bbox: (south, west, north, east)
     "Lagos": (6.35, 2.90, 6.75, 4.10),
@@ -23,29 +28,49 @@ CITIES = {
     "Gombe": (10.20, 11.05, 10.40, 11.30),
 }
 
-QUERY_TEMPLATE = """
-[out:json][timeout:90];
-(
-  nwr["landuse"="allotments"]({bbox});
-  nwr["landuse"="farmland"]({bbox});
-  nwr["landuse"="farmyard"]({bbox});
-  nwr["leisure"="garden"]({bbox});
-);
-out center tags;
-"""
+# Per-tag templates — smaller queries reduce timeout risk vs 4-in-1 union
+QUERY_TEMPLATES = [
+    '[out:json][timeout:30];nwr["landuse"="allotments"]({bbox});out center tags;',
+    '[out:json][timeout:30];nwr["landuse"="farmland"]({bbox});out center tags;',
+    '[out:json][timeout:30];nwr["landuse"="farmyard"]({bbox});out center tags;',
+    '[out:json][timeout:30];nwr["leisure"="garden"]({bbox});out center tags;',
+]
 
 def fetch_city(city, bbox):
     south, west, north, east = bbox
     bbox_str = f"{south},{west},{north},{east}"
-    q = QUERY_TEMPLATE.format(bbox=bbox_str)
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {"data": q}
+    headers = {"User-Agent": "YohannaPaper/1.0 (batestguy/urban-agriculture-and-urban-food-security-in-nigeria)"}
     if requests is None:
         raise RuntimeError("requests not installed — conda install requests")
-    r = requests.post(OVERPASS_URL, data=data, headers=headers, timeout=120)
-    r.raise_for_status()
-    j = r.json()
-    return j.get("elements", [])
+    all_elements = []
+    for q_tmpl in QUERY_TEMPLATES:
+        q = q_tmpl.format(bbox=bbox_str)
+        data = {"data": q}
+        last_err = None
+        for url in OVERPASS_URLS:
+            try:
+                r = requests.post(url, data=data, headers=headers, timeout=60)
+                r.raise_for_status()
+                # Overpass may return XML on error — ensure JSON
+                j = r.json()
+                all_elements.extend(j.get("elements", []))
+                last_err = None
+                break
+            except Exception as e:
+                last_err = e
+                continue
+        if last_err is not None:
+            print(f"  tag failed {q_tmpl[:30]}...: {last_err}", file=sys.stderr)
+        time.sleep(1)
+    # Dedupe by (type,id)
+    seen = set()
+    uniq = []
+    for e in all_elements:
+        key = (e.get("type"), e.get("id"))
+        if key not in seen:
+            seen.add(key)
+            uniq.append(e)
+    return uniq
 
 def main():
     p = argparse.ArgumentParser()

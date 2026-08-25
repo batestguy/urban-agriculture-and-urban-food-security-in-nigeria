@@ -27,5 +27,155 @@
     ],
     "timestamp_utc": "2026-08-25T07:05:46.056628+00:00",
     "license": "CC BY-4.0"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Gombe"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_gombe_test.csv",
+    "n_rows": 0,
+    "timestamp_utc": "2026-08-25T07:13:06.928187+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Gombe"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_gombe_test.csv",
+    "n_rows": 0,
+    "timestamp_utc": "2026-08-25T07:13:36.536288+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Gombe"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_gombe_test.csv",
+    "n_rows": 0,
+    "timestamp_utc": "2026-08-25T07:19:20.378688+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Gombe"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_gombe_test.csv",
+    "n_rows": 45,
+    "timestamp_utc": "2026-08-25T07:21:19.145102+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Abuja"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_abuja.csv",
+    "n_rows": 32,
+    "timestamp_utc": "2026-08-25T07:31:00.124697+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Lagos"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_lagos.csv",
+    "n_rows": 130,
+    "timestamp_utc": "2026-08-25T07:34:20.936520+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Kano"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_kano.csv",
+    "n_rows": 189,
+    "timestamp_utc": "2026-08-25T07:36:21.309412+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "OpenStreetMap Overpass API",
+    "url": "https://overpass-api.de/api/interpreter",
+    "cities": [
+      "Port Harcourt"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\osm_portharcourt.csv",
+    "n_rows": 88,
+    "timestamp_utc": "2026-08-25T07:38:39.546695+00:00",
+    "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors"
+  },
+  {
+    "source": "NASA POWER API",
+    "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude=7.3986&latitude=9.0765&start=20230101&end=20231231&format=JSON",
+    "city": "Abuja",
+    "lat": 9.0765,
+    "lon": 7.3986,
+    "start": "20230101",
+    "end": "20231231",
+    "out": "data\\raw\\nasa_power_abuja.csv",
+    "timestamp_utc": "2026-08-25T07:39:30.437224+00:00"
+  },
+  {
+    "source": "NASA POWER API",
+    "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude=3.3792&latitude=6.5244&start=20230101&end=20231231&format=JSON",
+    "city": "Lagos",
+    "lat": 6.5244,
+    "lon": 3.3792,
+    "start": "20230101",
+    "end": "20231231",
+    "out": "data\\raw\\nasa_power_lagos.csv",
+    "timestamp_utc": "2026-08-25T07:39:44.070525+00:00"
+  },
+  {
+    "source": "NASA POWER API",
+    "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude=8.592&latitude=12.0022&start=20230101&end=20231231&format=JSON",
+    "city": "Kano",
+    "lat": 12.0022,
+    "lon": 8.592,
+    "start": "20230101",
+    "end": "20231231",
+    "out": "data\\raw\\nasa_power_kano.csv",
+    "timestamp_utc": "2026-08-25T07:39:46.450457+00:00"
+  },
+  {
+    "source": "NASA POWER API",
+    "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude=7.0498&latitude=4.8156&start=20230101&end=20231231&format=JSON",
+    "city": "Port Harcourt",
+    "lat": 4.8156,
+    "lon": 7.0498,
+    "start": "20230101",
+    "end": "20231231",
+    "out": "data\\raw\\nasa_power_port_harcourt.csv",
+    "timestamp_utc": "2026-08-25T07:39:49.081152+00:00"
+  },
+  {
+    "source": "NASA POWER API",
+    "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude=11.1677&latitude=10.2896&start=20230101&end=20231231&format=JSON",
+    "city": "Gombe",
+    "lat": 10.2896,
+    "lon": 11.1677,
+    "start": "20230101",
+    "end": "20231231",
+    "out": "data\\raw\\nasa_power_gombe.csv",
+    "timestamp_utc": "2026-08-25T07:39:51.553586+00:00"
+  },
+  {
+    "source": "FAOSTAT API (or stub)",
+    "url": "https://fenixservices.fao.org/faostat/api/v1/en/data/FS?area=159",
+    "status": "http_521_stub",
+    "out": "D:\\YohannaPaper\\data\\raw\\fao_food_security.csv",
+    "timestamp_utc": "2026-08-25T07:40:41.766963+00:00"
   }
 ]
