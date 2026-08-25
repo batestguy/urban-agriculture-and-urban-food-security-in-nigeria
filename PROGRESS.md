@@ -62,13 +62,24 @@
 - **Push:** `git -C D:\YohannaPaper push` → **PUSH_EXIT 0** — `43affb9..7baa6d4 → master`. **Local and GitHub now in sync** (`pushedAt 2026-08-25T08:00:33Z`, `ahead 0`). Both commits now remote: `22e2948` (484+1825 rows) + `7baa6d4` docs.
 - **Security:** Classic PAT stored in Windows Credential Manager via `gh` (keyring). Rotate/revoke after conference if desired at https://github.com/settings/tokens.
 
-## Next actions (owner: batestguy) — Phase 2 → 3
+## 2026-08-25 09:00 UTC — PAUSE POINT (committed, push sync'd — continue next time)
+- **Git status:** `master` **up-to-date with `origin/master`** (`99a44ef` → `origin` `7baa6d4..99a44ef`), `working tree clean`, 40 files, 7 commits. **Drive D ↔ GitHub mirrored** — next session can resume from `D:\YohannaPaper` or fresh `git clone`.
+- **Phase 1 complete:** All raw data frozen — `worldbank_ng.csv` 75 rows, `osm_urban_ag.csv` 484 rows (5 cities), `nasa_power_*.csv` 1,825 rows, `fao stub` 1 row, `provenance.json` 14 entries. Local `D:\YohannaPaper\data/raw/` = GitHub `data/raw/` (30KB+). Auth fixed via classic PAT `ghp_...` (scopes `admin:org, repo, workflow`) — next `git push` will work.
+- **Resume next time:** 
+  1. `git -C "D:\YohannaPaper" pull` (if on another machine) or just open `D:\YohannaPaper`.
+  2. **Phase 2:** `data/external/gadm41_NGA_2.shp` — download LGA polygons (~100MB) per `data/external/README.md` — keep locally, **do NOT commit if >50MB** (add `data/external/*.shp` to `.gitignore` if needed).
+  3. **Phase 3:** `Rscript analysis/spatial/01_clean.R` → `data/processed/osm_urban_ag.gpkg` + `worldbank_ng_wide.csv`; then `02_spatial_stats.R` (Moran/LISA) + `03_maps.R`.
+  4. **Phase 4:** Fill `manuscript/manuscript.qmd` Methods → Results (see `docs/phases.md` order) → `quarto render` → `manuscript/manuscript.docx` (TNR 12pt 1.5 ≤12pp).
+- **To resume quickly:** `conda activate C:\Users\TOSHIBA\ds-general` + `Rscript --version` + `quarto check` — all verified 2026-08-25. See `docs/phases.md:Phase 2` for copy-paste commands. `README.md:5` progress in sync.
+
+## Next actions (owner: batestguy) — Phase 2 → 3 (pause)
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
 - [x] Phase 1b: OSM 484 rows — done
 - [x] Phase 1c: NASA POWER 5×365 — done
 - [x] Phase 1d: FAO stub — done
-- [ ] Fix auth: `gh auth login` → `git push` (when ready)
+- [x] Fix auth: classic PAT `ghp` → `gh auth login --with-token` → `git push` OK (2026-08-25 08:50)
+- [x] Pause commit `99a44ef` → `origin/master` sync'd — ready to continue next time
 - [ ] Phase 2: Download `data/external/gadm41_NGA_2.shp` (LGA polygons, ~100MB) — see `data/external/README.md` — **do NOT commit if >50MB**, add to `.gitignore`, keep locally
 - [ ] Phase 3: `Rscript analysis/spatial/01_clean.R → data/processed/osm_urban_ag.gpkg + worldbank_ng_wide.csv`
 
