@@ -1,9 +1,0 @@
-project:
-  type: default
-
-format:
-  docx:
-    reference-doc: reference.docx  # generated on first render if absent; else defaults
-    toc: false
-    number-sections: true
-    highlight-style: github

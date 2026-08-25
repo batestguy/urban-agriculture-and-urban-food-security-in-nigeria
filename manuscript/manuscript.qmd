@@ -12,7 +12,6 @@ format:
   docx:
     toc: false
     number-sections: true
-    reference-doc: reference.docx
 ---
 
 ::: {style="font-family: 'Times New Roman'; font-size: 12pt; line-height: 1.5;"}
