@@ -34,12 +34,18 @@
 - Created `docs/phases.md` — full 0–6 phased plan (Phase 0 verify 30 min → Phase 1 fetch WB→OSM→NASA→FAO → Phase 2 GADM shapefile → Phase 3 R pipeline 01/02/03 → Phase 4 manuscript order → Phase 5 Word compliance → Phase 6 submission 5/9 Oct). Timeline 25 Aug–15 Sep fetches, 16–30 Sep analysis+methods, 1–4 Oct results+abstract, 9 Oct full paper.
 - Starting **Phase 0 now**: env verify + restore `manuscript/_quarto.yml` (was missing → Calibri fallback). See `docs/phases.md:Phase 0`.
 
-## Next actions (owner: batestguy) — Phase 0 → 1 handoff
-- [ ] Phase 0: `conda list -p C:\Users\TOSHIBA\ds-general | Select-String "requests|geopandas|pandas|numpy"` — verify
-- [ ] Phase 0: `Rscript -e "packageVersion(c('sf','terra','spdep','spatialreg','dplyr','readr','tidyr','ggplot2'))"`
-- [ ] Phase 0: `quarto check` + `git -C D:\YohannaPaper status` + recreate `manuscript/_quarto.yml`
-- [ ] Phase 1a: `python scripts/fetch_worldbank.py --out data/raw/worldbank_ng.csv`
+## 2026-08-25 08:05 UTC — Phase 1a DONE: World Bank API freeze
+- **Ran:** `C:\Users\TOSHIBA\ds-general\python.exe scripts/fetch_worldbank.py --out data/raw/worldbank_ng.csv` → **EXIT 0, 75 rows** (25 per indicator).
+- **Indicators:** `SP.URB.TOTL` urban pop (2024: 146,531,222 → 2000: ~), `AG.PRD.FOOD.XD` food production index (2022: 119.85, 2021:117.33 … 2000:64.5), `SN.ITK.DEFC.ZS` undernourishment % (2023:19.9, 2022:18.7 … 2001:8.7). **Only 2 NAs per indicator** (2024/2000 for undernourishment, 2024/2023 for food index) — not sparse, usable. No decision to drop.
+- **Files:** `data/raw/worldbank_ng.csv` (4,995B) + `data/raw/provenance.json` (first entry, CC BY-4.0, timestamp 2026-08-25T07:05:46Z, URLs logged). `git status` shows 2 new data files.
+- **Next:** Phase 1b OSM isolated test (`Gombe → osm_gombe_test.csv`) then 5-city full.
+
+## Next actions (owner: batestguy) — Phase 1b → 1c/d
+- [x] Phase 0: verify done (see 07:45 entry)
+- [x] Phase 1a: `worldbank_ng.csv` — done 08:05
 - [ ] Phase 1b: `python scripts/fetch_osm_urban_ag.py --city Gombe --out data/raw/osm_gombe_test.csv` (isolated test) → 5-city run
+- [ ] Phase 1c: `fetch_nasa_power.py --city Abuja/Lagos/Kano/PortHar/Gombe`
+- [ ] Phase 1d: `fetch_fao.py` (expect stub)
 
 ## Decisions & risks
 - Local folder stays `D:\YohannaPaper` (not renamed to spaced title); GitHub slug `urban-agriculture-and-urban-food-security-in-nigeria` is the canonical name. Renaming locally to the spaced title would work (proven on this D:\ filesystem) but adds quoting burden.

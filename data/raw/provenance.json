@@ -1,0 +1,31 @@
+[
+  {
+    "source": "World Bank Indicators API",
+    "indicators": [
+      "SP.URB.TOTL",
+      "AG.PRD.FOOD.XD",
+      "SN.ITK.DEFC.ZS"
+    ],
+    "out": "D:\\YohannaPaper\\data\\raw\\worldbank_ng.csv",
+    "n_rows": 75,
+    "details": [
+      {
+        "indicator": "SP.URB.TOTL",
+        "url": "https://api.worldbank.org/v2/country/NG/indicator/SP.URB.TOTL?format=json&per_page=100&date=2000:2024",
+        "n": 25
+      },
+      {
+        "indicator": "AG.PRD.FOOD.XD",
+        "url": "https://api.worldbank.org/v2/country/NG/indicator/AG.PRD.FOOD.XD?format=json&per_page=100&date=2000:2024",
+        "n": 25
+      },
+      {
+        "indicator": "SN.ITK.DEFC.ZS",
+        "url": "https://api.worldbank.org/v2/country/NG/indicator/SN.ITK.DEFC.ZS?format=json&per_page=100&date=2000:2024",
+        "n": 25
+      }
+    ],
+    "timestamp_utc": "2026-08-25T07:05:46.056628+00:00",
+    "license": "CC BY-4.0"
+  }
+]
