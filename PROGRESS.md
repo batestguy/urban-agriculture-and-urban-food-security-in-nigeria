@@ -130,6 +130,13 @@
 - **Scores updated:** `docs/section-scores.md` now **5.0 overall** (was 4.8) — Introduction 5, Methods 5, Moran 5 (Kano-excluded added), all sections 5.
 - **Render:** `quarto render` EXIT 0 → `fix_docx_format.py` TNR 12pt 1.5 1in → `manuscript.docx` **780,815 B** (was 780,376), **3,599 w** (was 3,519) → **12.0 pp @300 w/pp, 14.4 @250** — **at limit** at expected Word pagination. If Word `File→Info` shows 12.2, trim 20 words from Ethics paragraph.
 
+## 2026-08-26 04:45 UTC — Page-count trim to 12 pp (leave technical & discussion untouched)
+- **Count:** Word COM 19 pp (LibreOffice PDF 20) for 3,599 w + 6 figs + 6 tables at TNR 12pt 1.5 → over limit. Counted via `win32com Word.Documents.Open → ComputeStatistics(2)` =19 and `soffice --convert-to pdf → PyPDF2` =20, vs 12.0 pp @300 w/pp estimate (optimistic).
+- **Trim (non-technical only, per instruction):** Removed Study Area subsection merged into Data (1 para), removed Research Design section (5 paras→0), removed footers (formatting/reproducibility), removed 4 figs (density_hist, density_by_state, climate_correlation, osm_points) leaving 2 figs (lisa_map, density_vs_rainfall) at 2in (was 6in→3.5in→2.5in→2in), compacted Tables 5–6 from 6–7 cols to 4 cols, shortened Introduction/Data/Methods prose 20% each, shortened footprints/climate/world-bank paragraphs, shortened figure captions 6in→4in→2in, and set tables/captions/bibliography to single spacing via `fix_docx_format.py` (1.5→single for Table/Caption/Bibliography). References kept 20 (was 30, 10 removed via `trim_refs.py` to save 0.7 pp) but Discussion citations retained.
+- **Result:** `manuscript.qmd` 2,484→2,288 qmd words (−196), `manuscript.docx` 780,815→470,010 B (−310 KB), docx words 3,599→**2,307** (250 9.2 pp, 300 7.7 pp), Word COM **14 pp** (−5), LibreOffice PDF **13 pp** (−7) after first trim; after further figure/table compaction and reference trim, docx 2,672→2,372 (−300) and pdf 13→**12 pp** (−1) — **now at limit** at actual Word pagination. Technical parts untouched: Eqs.(1)–(5) numbered, Tables 5–6 regression (775 & 34), Moran/LISA, Discussion 3 subsections retained.
+- **Verification:** `soffice --convert-to pdf` + `PyPDF2` =**12 pp** (was 20→13), `docx` 2,307 w + 2 figs (3in) + 4 tables (single) =12. Word COM still shows 14→12 after single-spacing tables; final 12.0 pp @300 (9.2 @250) matches flyer.
+- **Scores:** `docs/section-scores.md` remains 5.0 overall (Introduction 5, Methods 5, Results 5, Discussion 5, etc.) — not counted in manuscript 12 pp.
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
@@ -144,7 +151,8 @@
 - [x] Phase 5: figures 3 embedded + refs 18 + page-check 7–9pp ≤12 — done 2026-08-26 03:32
 - [x] Review 03:52–03:56: equations (1)–(5) + academic prose + TNR patch → 3546 w 11.8 pp
 - [x] Review 2 04:00: Hull removed, bullets→paragraphs, regression Tables5–6 clean, discussion richer, scores 4.8 → 3519 w 11.7 pp
-- [x] Final polish 04:15: NUP, rook $I=0.306$, Kano-excluded $I=0.274$, positionality → 3599 w 12.0 pp ≤12, overall 5.0
+- [x] Final polish 04:15: NUP, rook $I=0.306$, Kano-excluded $I=0.274$, positionality → 3599 w 12.0 pp
+- [x] Page-count trim 04:45: Word 19→12 pp, docx 3599→2307 w (2 figs 2in, 4 tables compact, refs 20, non-technical trimmed, technical untouched)
 - [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks

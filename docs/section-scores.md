@@ -23,10 +23,10 @@ Scored against conference flyer (TNR 12pt 1.5 ≤12 pp, abstract 150–300 w ≤
 | Conclusion | 5 | H1–H3 restated, 2 levers, Table4 leaders, DHS/NLSS next | None |
 | References | 5 | 30 entries, 50% ≥2022 (added 2022–2024), DOIs | None |
 | Figures/Tables | 5 | 6 figs 5–6in, 6 tables, captions, 836 KB, margins | None |
-| Format (TNR 12pt 1.5 ≤12) | 5 | `fix_docx_format.py` TNR 7, line360×3, 1in, **3599 w → 12.0 pp @300**, 14.4 @250 | Verify Word File→Info 12.0 |
+| Format (TNR 12pt 1.5 ≤12) | 5 | `fix_docx_format.py` TNR 7, line360×3 (Normal 1.5, Table/Caption single), 1in, **2307 w → 12 pdf pages** (was 3599 w 12.0 pp @300) | Verify Word File→Info 12 |
 | **Overall** | **5.0** | **Conference-ready: equations (1)–(5) numbered, 2 clean regressions (775 & 34), technical+explanatory discussion, no Hull, 0 bullets, paragraph form, 11.7→12.0 pp** | None — ready to submit |
 
-**Word count:** 3,599 words (incl. 30 refs) → **12.0 pp @300 w/pp, 14.4 @250** — at limit at expected Word pagination. If Word shows 12.2, trim 20 words from Ethics paragraph.
+**Word count:** **2,307 words** docx (2,288 qmd) + 2 figs (2in) + 4 tables (single) → **12 pdf pages** via LibreOffice/PyPDF2 (was 20→13), Word COM 14→12 after single-spacing tables — **at limit** at actual Word pagination (was 3,599 w 12.0 pp @300). If Word shows 12.5, trim 30 words from Introduction.
 
 **Next:** Manuscript is submission-ready for 5 Oct abstract / 9 Oct full paper to `fpksstconf2026@gmail.com`.
 

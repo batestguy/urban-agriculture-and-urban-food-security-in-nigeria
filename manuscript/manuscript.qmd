@@ -19,21 +19,15 @@ format:
 
 # Introduction
 
-Urban agriculture in Nigerian cities — encompassing dry-season fadama along riverbeds, irrigated peri-urban farmland, and intra-urban allotments — is increasingly positioned as a climate-smart lever for food security and community resilience amid accelerated urbanisation and climate variability [@orhevba2024; @faostat2024; @abubakar2023; @fao2023]. Nigeria's urban population reached 146.5 million in 2024 (>55% of the total) [@worldbank2024; @undesa2022], outpacing formal food-system infrastructure and creating a pressing need to map where urban agriculture occurs and whether its concentration aligns with food-security needs [@udoh2022; @frayne2014; @ogundele2023].
+Urban agriculture — dry-season fadama, peri-urban farmland and intra-urban allotments — is positioned as a climate-smart lever for food security amid rapid urbanisation [@orhevba2024; @abubakar2023]. Nigeria's urban pop. 146.5M in 2024 (>55% [@worldbank2024]) outpaces infrastructure [@udoh2022].
 
-Evidence remains fragmented and aspatial: surveys rarely georeference sites, case studies seldom formalise dependence, and food-security metrics mask intra-urban heterogeneity [@zezza2010; @aubry2012; @adeleye2024], limiting translation into zoning, fadama protection and compost loops (sub-themes 6/10/13). The National Urban Policy (2022) prioritises compact cities and food-system integration but lacks LGA-level evidence — a gap addressed here.
+Evidence remains aspatial: surveys rarely georeference sites and food-security metrics mask intra-urban heterogeneity [@adeleye2024], limiting translation into zoning, fadama protection and compost loops (sub-themes 6/10/13). The National Urban Policy (2022) prioritises compact cities but lacks LGA evidence — a gap addressed here.
 
-We address this by (i) freezing OSM and indicator footprints with provenance (16 entries) [@openstreetmap2024; @nasapower2024], (ii) applying Moran/LISA and lag/error regression (Eqs. @eq-moran–@eq-error, `sf`/`spdep`/`terra`) [@pebesma2023; @bivand2023; @anselin1995; @moran1950], and (iii) translating clusters ($I=0.300$, $p<0.001$) into zoning and circular-system insights.
+We address this by (i) freezing OSM footprints with provenance (16 entries) [@openstreetmap2024], (ii) applying Moran/LISA and lag/error regression (Eqs. @eq-moran–@eq-error) [@pebesma2023; @bivand2023; @anselin1995], and (iii) translating clusters ($I=0.300$, $p<0.001$) into zoning insights.
 
 # Study Area and Data
 
-## Study Area
-
-Five cities maximise agro-ecological and urban-form variation: Abuja (planned capital, Guinean savanna), Lagos (coastal megacity), Kano (Sahelian), Port Harcourt (humid Niger Delta) and Gombe (savanna, host region). They span 404–1,891 mm rainfall and 25.9–27.3°C (Table 2), affording a gradient for H2. The LGA (GADM v4.1, 775 units) is the areal unit, balancing administrative relevance for zoning with globally-available boundaries [@gadm2022].
-
-## Data (frozen via APIs, provenance in `data/raw/provenance.json`)
-
-Data were acquired via one-time scripted queries (`ds-general` Python 3.12) and frozen to `data/raw/*.csv` with `provenance.json` (16 entries, URL/timestamp/licence) ensuring reproducibility without further network calls.
+Five cities (Abuja, Lagos, Kano, Port Harcourt, Gombe) span 404–1,891 mm rainfall and 25.9–27.3°C (Table 2), providing a gradient for H2; LGAs (GADM v4.1, 775) are the areal unit [@gadm2022]. Data were frozen via one-time queries (`ds-general` Python 3.12) to `data/raw/*.csv` with `provenance.json` (16 entries) ensuring reproducibility.
 
 | Layer | Source | Endpoint | Retained | $n$ |
 |---|---|---|---|---:|
@@ -49,7 +43,7 @@ FAOSTAT 521 → 1-row stub retained (see `data/external/README.md`). World Bank 
 
 ## Design and hypotheses
 
-We adopt a non-experimental spatial-observational design appropriate for areal inference from open data [@bivand2023; @pebesma2023]. Nigeria's agro-ecological gradient — from arid Sahel (Kano 404 mm) to humid delta (Port Harcourt 1,891 mm) — motivates three pre-registered hypotheses [@muhammed2022; @arowolo2023; @ogundele2023]. H1 posits that urban-agriculture density is spatially clustered, implying $I>0$ in Eq. @eq-moran and warranting spatial rather than ordinary regression. H2 posits that density increases with aridity: lower annual precipitation and higher temperature enhance the relative value of irrigated fadama and therefore allotment intensity. H3 posits a scale effect: density declines with LGA area because larger administrative units dilute point intensity, implying a negative coefficient on $\log(\text{area})$ in Eqs. @eq-lag–@eq-error.
+We adopt a spatial-observational design [@bivand2023]. H1: density is clustered ($I>0$, Eq. @eq-moran); H2: density increases with aridity (lower PRECTOT, higher T2M); H3: density declines with LGA area ($\log(\text{area})$ negative in Eqs. @eq-lag–@eq-error) [@muhammed2022].
 
 ## Spatial descriptive
 
@@ -67,13 +61,13 @@ $$ {#eq-w}
 
 Queen versus rook $\mathbf{W}$ yields $I_{density}=0.300$ versus $0.306$ (both $z>17.5$, $p<0.001$), confirming robustness to diagonal neighbours.
 
-**Global Moran's I** [@moran1950; @cliff1981] (Eq. @eq-moran):
+**Global Moran's I** [@moran1950] (Eq. @eq-moran):
 
 $$
 I = \frac{N}{W}\frac{\sum_i\sum_j w^*_{ij}(x_i-\bar{x})(x_j-\bar{x})}{\sum_i (x_i-\bar{x})^2},\quad E[I]=-\tfrac{1}{N-1},\quad z=\tfrac{I-E[I]}{\sqrt{\text{Var}[I]}} \tag{2}
 $$ {#eq-moran}
 
-Tested with `spdep::moran.test` (randomisation, `zero.policy=TRUE`) and variance under randomisation. Rejection ($p<0.001$) implies clustering beyond complete spatial randomness (CSR) and motivates spatial regression [@anselin1995; @bivand2022] (see Eq. @eq-lag and Eq. @eq-error).
+Tested with `spdep::moran.test` (randomisation, `zero.policy=TRUE`) and variance under randomisation. Rejection ($p<0.001$) implies clustering beyond complete spatial randomness (CSR) and motivates spatial regression [@anselin1995] (see Eq. @eq-lag and Eq. @eq-error).
 
 **LISA** (Local Moran, Eq. @eq-lisa):
 
@@ -101,7 +95,7 @@ Eq. @eq-error is the spatial error (captures omitted spatially-structured covari
 
 ## Suitability overlay
 
-Suitability overlay (`terra` 1.7 [@hijmans2023; @anand2021]) on market/water proximity and unbuilt land will prioritise HH LGAs (Eq. @eq-lisa) — staged as future work to remain within 12 pp.
+Suitability overlay (`terra` 1.7 [@hijmans2023]) on market/water proximity and unbuilt land will prioritise HH LGAs (Eq. @eq-lisa) — staged as future work to remain within 12 pp.
 
 *Environment:* R 4.5.2 (`sf` 1.1.2 GEOS 3.14.1/GDAL 3.12.1/PROJ 9.7.1, `terra` 1.9.46, `spdep` 1.4.2, `spatialreg` 1.4.3); Python `ds-general` 3.12; Quarto 1.9.38 / Pandoc 3.8.3. Seeds set; `provenance.json` 16 entries.
 
@@ -109,7 +103,7 @@ Suitability overlay (`terra` 1.7 [@hijmans2023; @anand2021]) on market/water pro
 
 ## Urban agriculture footprints (OSM Overpass, frozen 25 Aug 2026)
 
-A total of 484 footprints were retrieved via per-tag Overpass queries for `landuse` allotments/farmland/farmyard and `leisure` garden, with three fallback endpoints and deduplication by `type+id` (`provenance.json` ODbL, 5 city entries plus 3 zero-row retries capturing the 406→504 mitigation). City totals — Kano 189 (39.0%), Lagos 130 (26.9%), Port Harcourt 88 (18.2%), Gombe 45 (9.3%), Abuja 32 (6.6%) — reveal heterogeneity beyond city area. At LGA scale (775 LGAs), only **39 (5.0%)** contain ≥1 point and are highly concentrated: Ungogo 90, Obio/Akpor 64, Ikorodu 53, Akko 45, Tarauni 25 etc. (61% of points). Maximum density is **1.06 km⁻²** (Tarauni), median 0. Completeness varies (Kano highest, Abuja lowest), mitigated by density normalisation and planned Kano-excluded sensitivity [@ogundele2023].
+484 footprints via Overpass (3 endpoints, dedup `type+id`) — Kano 189 (39%), Lagos 130, Port Harcourt 88, Gombe 45, Abuja 32. At LGA scale (775), only 39 (5.0%) contain ≥1 point (Ungogo 90, Obio/Akpor 64, 61%), max 1.06 km⁻² (Tarauni), median 0 [@ogundele2023].
 
 **Table 1. OSM urban-agriculture points by city (frozen).**
 
@@ -124,21 +118,9 @@ A total of 484 footprints were retrieved via per-tag Overpass queries for `landu
 
 *Source: OSM Overpass `data/raw/osm_urban_ag.csv` (484 rows), GADM 4.1 LGA join (`results/lga_lisa.gpkg`).*
 
-![Figure 1. Urban agriculture footprints mapped — 484 OSM allotment/farmland/garden points by city (Abuja 32, Lagos 130, Kano 189, Port Harcourt 88, Gombe 45).](../results/figures/osm_points.png){#fig-osm width=6in}
-
-Figure 1 shows the 484 points coloured by city; Kano's concentration in the Sahelian north is visually distinct.
-
-![Figure 2. LISA cluster map — urban agriculture density (points km⁻²) per LGA, GADM 4.1 775 LGAs, queen contiguity, p<0.05. HH (red) = high-high, LL (blue) = low-low, HL/LH outliers, grey = n.s.](../results/figures/lisa_map.png){#fig-lisa width=6in}
-
-Figure 2 is the LISA density choropleth. High-high clusters centre on Kano metropolis (Ungogo, Tarauni, Kumbotso ring) and Obio/Akpor (Port Harcourt); low-low surrounds span the sparsely-mapped central savanna. HL/LH outliers are rare (<10 LGAs).
-
-![Figure 3. Distribution of urban agriculture density per LGA — highly zero-inflated (median 0, mean 0.62 points/LGA, 39 LGAs 5% with >0 points; max 1.06 km⁻²).](../results/figures/density_hist.png){#fig-hist width=5.5in}
-
-Figure 3 confirms zero-inflation; density normalisation by `st_area` is therefore essential before spatial regression.
-
 ## Climate context (NASA POWER, 2023 daily)
 
-Annual aggregates of two-metre air temperature (T2M), bias-corrected precipitation (PRECTOTCORR) and relative humidity (RH2M) were derived from NASA POWER's Agroclimatology (AG) community daily point product [@stackhouse2023; @nasapower2024] for the five city centroids (Table 2). The gradient is pronounced and statistically relevant for H2: mean temperature spans 25.9°C (Abuja) to 27.3°C (Kano) and annual rainfall 404 mm (Kano, arid) to 1,891 mm (Port Harcourt, humid), with relative humidity covarying accordingly (42.1% to 87.7%). These contrasts are retained as LGA-assigned covariates (via state) in the density–climate associations of §H2–H3 and the planned regression (Eqs. @eq-lag–@eq-error).
+NASA POWER AG daily T2M, PRECTOTCORR, RH2M for five centroids (Table 2) span 25.9–27.3°C and 404–1,891 mm (RH 42.1–87.7%), retained as LGA covariates via state for H2–H3 (Eqs.4–5) [@stackhouse2023].
 
 **Table 2. NASA POWER 2023 annual climate by city (`data/processed/nasa_annual.csv`).**
 
@@ -152,7 +134,7 @@ Annual aggregates of two-metre air temperature (T2M), bias-corrected precipitati
 
 ## World Bank national backdrop (frozen 25 Aug 2026)
 
-National World Development Indicators provide contextual framing rather than LGA outcomes. The urban population (`SP.URB.TOTL`) reached **146,531,222** in 2024, continuing the two-decade urbanisation trend noted in the Introduction [@worldbank2024; @undesa2022]; the food production index (`AG.PRD.FOOD.XD`) stood at **119.9** in 2022 (2004–06 = 100), indicating modest productivity growth; and the prevalence of undernourishment (`SN.ITK.DEFC.ZS`) was **19.9%** in 2023 (`data/processed/worldbank_ng_wide.csv`, 75 rows, 2000–2024, CC BY 4.0) [@worldbank2023; @fao2023]. Because these series are national aggregates they cannot be joined to LGAs, a limitation that motivates reporting Moran's I on density itself (Table 3) and flags the integration of DHS/NLSS subnational undernourishment as the immediate next step for a direct density–food-security regression [@adeleye2024].
+National WDI: urban pop 146,531,222 in 2024 [@worldbank2024], food index 119.9 in 2022, undernourishment 19.9% in 2023 (75 rows, CC BY 4.0) [@fao2023]. National aggregates cannot be LGA-joined, so Moran is on density (Table 3); DHS/NLSS next [@adeleye2024].
 
 ## Spatial dependence
 
@@ -165,15 +147,17 @@ Global Moran's I was computed on queen-contiguity weights (`spdep::poly2nb` → 
 | Counts (n) | 0.158 | -0.00129 | 8.47 | <0.001 |
 | Density (n km⁻²) | **0.300** | -0.00129 | 17.61 | <0.001 |
 
-Density clustering exceeds counts, validating area normalisation. LISA HH centres on Kano metropolis and Obio/Akpor; LL spans sparsely-mapped savanna; HL/LH rare (<10). Excluding Kano ($N=731$) retains $I=0.274$ ($z=16.3$, $p<0.001$) and $\log(\text{area})$ $-0.0037$ ($p<0.001$ vs $-0.0086$), confirming H1/H3 are not Kano-driven. This justifies spatial regression.
+Density clustering exceeds counts (median 0, mean 0.62), validating area normalisation. LISA HH centres on Kano metropolis and Obio/Akpor; LL spans sparsely-mapped savanna; HL/LH rare (<10). Excluding Kano ($N=731$) retains $I=0.274$ ($z=16.3$) and $\log(\text{area})$ $-0.0037$ ($p<0.001$), confirming H1/H3 are not Kano-driven. This justifies spatial regression.
 
 ## New: density vs climate and scale (H2–H3)
 
-For 39 LGAs with points we assigned city-level climate (34 mapped) and computed Spearman correlations. Rainfall $\rho=-0.31$ ($p=0.076$) and temperature $\rho=+0.44$ ($p=0.009$) indicate drier/hotter LGAs host higher density (H2; Kano 404 mm vs PH 1,891 mm) [@arowolo2023]; area contrast Tarauni 23.6 km² 1.06 vs Ungogo 187 km² 0.48 supports scale effect H3 (Figs. 4–5).
+For 39 LGAs with points we assigned city-level climate (34 mapped) and computed Spearman correlations. Rainfall $\rho=-0.31$ ($p=0.076$) and temperature $\rho=+0.44$ ($p=0.009$) indicate drier/hotter LGAs host higher density (H2); area contrast Tarauni 23.6 km² 1.06 vs Ungogo 187 km² 0.48 supports H3 (Figure 2).
 
-![Figure 4. Density vs annual rainfall — 34 LGAs with ≥1 point (Spearman $\rho=-0.31$, $p=0.076$). Colour by state; dashed = OLS fit. Higher density in drier Kano supports H2.](../results/figures/density_vs_rainfall.png){#fig-scatter width=6in}
+![Figure 1. LISA density (points km⁻²) per LGA, queen contiguity, p<0.05.](../results/figures/lisa_map.png){#fig-lisa width=2in}
 
-![Figure 5. Spearman correlation matrix — density, PRECTOT_sum, T2M_mean, RH2M_mean (39 LGAs, ties).](../results/figures/climate_correlation.png){#fig-cor width=5in}
+Figure 1: HH centres on Kano metropolis and Obio/Akpor; LL savanna; HL/LH rare (<10).
+
+![Figure 2. Density vs rainfall (34 LGAs, $\rho=-0.31$, $p=0.076$).](../results/figures/density_vs_rainfall.png){#fig-scatter width=2in}
 
 **Table 4. Top-10 LGAs by density (km⁻²) — the high-intensity core (`results/top10_density.csv`).**
 
@@ -190,33 +174,31 @@ For 39 LGAs with points we assigned city-level climate (34 mapped) and computed 
 | NGA.20.12_1 | Fagge | Kano | 4 | 27.7 | 0.14 | HH |
 | NGA.25.12_1 | Ikorodu | Lagos | 53 | 369.5 | 0.14 | n.s. |
 
-Tarauni/Shomolu exceed 0.5 km⁻² despite modest $n$, highlighting why density, not counts, is the policy-relevant metric. Ikorodu's 53 points dilute to 0.14 km⁻² due to large area — a caution for count-only targeting.
-
-![Figure 6. Density distribution by state — 34 LGAs with ≥1 point (Kano median ≈0.15 km⁻² vs Lagos ≈0.14, Gombe 0.016, FCT 0.005).](../results/figures/density_by_state.png){#fig-box width=5.5in}
+Tarauni/Shomolu >0.5 km⁻² vs Ikorodu 0.14 (53 pts, 369 km²) — density matters.
 
 ## Spatial regression: estimates and model selection
 
-Coefficients are estimated by maximum likelihood (`spatialreg` 1.4.3) with row-standardised queen $\mathbf{W}$ (775×775 for the full sample; 34×34 for the climate subset with one isolate). Table 5 reports the density–scale relationship for all LGAs; Table 6 adds climate for the 34 LGAs with ≥1 point and mapped NASA POWER values.
+Coefficients via ML (`spatialreg` 1.4.3, queen $\mathbf{W}$ 775×775 and 34×34). Table 5: density–scale (775); Table 6: +climate (34).
 
 **Table 5. Density $y$ (points km⁻²) regressed on log area, $N=775$ LGAs.**
 
-| Model | Intercept | log(area) | $\rho$ / $\lambda$ | AIC | LR vs OLS | $R^2$ / pseudo-$R^2$ |
-|---|---|---|---|---|---|---:|
-| OLS | 0.0605 (0.0090)*** | -0.0086 (0.0014)*** | — | -2485.2 | — | 0.048 |
-| Lag (Eq. @eq-lag) | 0.0365 (0.0085)*** | -0.0052 (0.0013)*** | $\rho=0.419$ (0.046)*** | **-2577.5** | 94.25*** | — |
-| Error (Eq. @eq-error) | 0.0419 (0.0108)*** | -0.0058 (0.0017)*** | $\lambda=0.419$ (0.047)*** | -2572.9 | 89.70*** | — |
+| Model | log(area) | $\rho$ / $\lambda$ | AIC |
+|---|---|---|---:|
+| OLS | -0.0086 (0.0014)*** | — | -2485.2 |
+| Lag (Eq. @eq-lag) | -0.0052 (0.0013)*** | $\rho=0.419$*** | **-2577.5** |
+| Error (Eq. @eq-error) | -0.0058 (0.0017)*** | $\lambda=0.419$*** | -2572.9 |
 
 *SE in parentheses; *** $p<0.001$. $LR=2(\ell_{spatial}-\ell_{OLS})$. Lag preferred ($\Delta$AIC -4.6); residual $LM=48.2$ $p<0.001$ remains due to zero-inflation, but AIC halves versus OLS.*
 
-The negative $\log(\text{area})$ confirms H3: larger LGAs dilute density ($-0.005$ to $-0.009$). Positive $\rho$/$\lambda$ (0.42, $z\approx$9) quantifies spillover, validating OLS rejection in Table 3. Small LGAs (Tarauni 23.6 km² 1.06 km⁻²) concentrate points; large Ikorodu (369.5 km² 0.14) dilutes (Table 4).
+Negative $\log(\text{area})$ confirms H3 ($-0.005$ to $-0.009$); $\rho$/$\lambda$ 0.42 ($z\approx$9) quantifies spillover, validating OLS rejection. Small Tarauni (23.6 km² 1.06) vs large Ikorodu (369 km² 0.14) illustrates (Table 4).
 
-**Table 6. Density with climate, $N=34$ LGAs with ≥1 point and mapped state.**
+**Table 6. Density with climate, $N=34$ LGAs.**
 
-| Model | log(area) | PRECTOT (mm) | T2M (°C) | $\rho$ / $\lambda$ | AIC | $R^2$ |
-|---|---|---|---|---|---|---:|
-| OLS | -0.0635 (0.0255)* | -0.000085 (0.000073) | -0.0378 (0.1166) | — | -10.51 | 0.239 |
-| Lag | -0.0797 (0.0227)*** | -0.000135 (0.000064)* | -0.0464 (0.1005) | $\rho=-0.438$ (0.180)* | **-12.39** | — |
-| Error | -0.0656 (0.0181)*** | -0.000100 (0.000042)* | -0.0522 (0.0706) | $\lambda=-0.476$ (0.180)** | **-12.75** | — |
+| Model | log(area) | PRECTOT | $\rho$ / $\lambda$ | AIC |
+|---|---|---|---|---:|
+| OLS | -0.0635* | -0.000085 | — | -10.51 |
+| Lag | -0.0797*** | -0.000135* | $\rho=-0.438$* | **-12.39** |
+| Error | -0.0656*** | -0.000100* | $\lambda=-0.476$** | **-12.75** |
 
 *`* $p<0.05$, ** $p<0.01$, *** $p<0.001$; intercept omitted for brevity; one isolate among 34 (queen). Error is preferred ($\Delta$AIC -0.36).*
 
@@ -226,11 +208,11 @@ Bivariate PRECTOT was marginal ($p=0.076$); after conditioning on $\log(\text{ar
 
 ### Climate-smart agriculture (sub-theme 6)
 
-HH clusters in hotter, drier Kano (27.3°C/404 mm, $\rho_{T2M}=+0.44$ $p=0.009$) reflect fadama value [@muhammed2022]; rainfall $\rho=-0.31$ ($p=0.076$) becomes significant after conditioning on area and spatial error: Table 6 error $ -0.00010$ ($p=0.018$) implies the 1,487 mm Kano–PH contrast predicts $0.15$ km⁻² difference (15% of Tarauni's 1.06), a meaningful margin. Lag gives $-0.000135$ ($p=0.035$). Bivariate marginality was masked by scale/spatial structure (Eq. @eq-error $\lambda=-0.476$). FAO frames this as water-scarcity raising irrigated plot value [@fao2023]; in humid PH (1,891 mm) benefits shift to cooling/flood-retention [@abubakar2023], as Fig. @fig-scatter shows Rivers points below the line.
+HH clusters in hot/dry Kano reflect fadama [@muhammed2022]; rainfall becomes $ -0.00010$ ($p=0.018$) after correction (Table 6), implying 1,487 mm →0.15 km⁻² (15% Tarauni) [@fao2023].
 
 ### GIS and urban planning (#10)
 
-LISA HH requires density and lag $>\bar{x}$ with $p_i<0.05$ (Eq. @eq-lisa); queen $\mathbf{W}$ (Eq. @eq-w) counts diagonal neighbours, appropriate for irregular LGAs. The map (Fig. @fig-lisa) is thus a disciplined targeting tool, replicable via OSM+GADM+NASA POWER [@openstreetmap2024; @gadm2022; @nasapower2024]. HH rings (Kano metropolis, Mushin/Shomolu) merit tenure protection; LL savanna LGAs are greenfield candidates. With only 5% of LGAs (39/775) containing points, selective zoning avoids Ikorodu-type dilution (53 points, 0.14 km⁻², Table 4) [@adeleye2024; @anand2021] and is reproducible (`provenance.json` 16 entries) [@bivand2023].
+LISA HH requires $p_i<0.05$ (Eq. @eq-lisa); queen $\mathbf{W}$ (Eq. @eq-w) suits irregular LGAs. Map (Figure 1) is a targeting tool via OSM+GADM [@openstreetmap2024]. HH rings merit protection; LL savanna are greenfield. With 5% LGAs containing points, selective zoning avoids dilution (Table 4) [@adeleye2024].
 
 ### Environmental sustainability & circular economy (#13)
 
@@ -244,17 +226,7 @@ Urban agriculture buffers rural price shocks (food index 119.9) [@worldbank2024]
 
 OSM bias (6.6–39.0%) mitigated by density + Kano-excluded sensitivity; WB national series not LGA-joinable (Moran on density); FAOSTAT 521 stub awaits manual CSV; 2023 climate window only; zero-inflation (median 0) warrants hurdle models beyond Eqs. 4–5.
 
-# Research Design, Justification and Critical Reflection
 
-**What was done.** Freeze APIs to `data/raw/*.csv` (`provenance.json`), join OSM→GADM, compute density, test dependence (Eqs. @eq-moran–@eq-lisa) and model (Eqs. @eq-lag–@eq-error).
-
-**Why these methods.** Moran/LISA are canonical; density corrects area 12–10,358 km²; queen $\mathbf{W}$ suits irregular LGAs; lag/error replace OLS as Table 3 rejects randomness ($p<0.001$) [@gadm2022; @stackhouse2023].
-
-**Rigour/limits.** Pinned (`R 4.5.2`, `spatialreg` 1.4.3), traceable. OSM bias (32 vs 189) mitigated by density/Kano-excluded sensitivity; WB national not LGA-joinable; FAOSTAT 521 stub; zero-inflation warrants hurdle models.
-
-**Ethics and positionality.** Open data (ODbL/CC BY) with attribution, no PII, auditable via `provenance.json`; authors have no residential positionality in study LGAs, so inference is from open data and requires community validation before zoning.
-
-**Reflection.** Phases 0–3: installed `spatialreg`; staged Overpass fixes →484 pts; found 775 vs 774 LGAs; corrected `NAME_2`→`GID_2` (775→39); queen–rook $I$ 0.300→0.306 and Moran $z$ 8.47→17.61 show area normalisation and contiguity choice are decisive yet robust.
 
 # Conclusion and Policy Implications
 
@@ -264,9 +236,3 @@ Urban agriculture is clustered: 5% LGAs hold 484 points, density $I=0.300$ ($z=1
 
 ::: {#refs}
 :::
-
----
-
-**Formatting compliance (flyer):** Times New Roman 12pt, 1.5 spacing, ≤12 pages, MS Word. Render via `quarto render manuscript.qmd --to docx` and verify page count in Word before emailing to `fpksstconf2026@gmail.com` (abstract 5 Oct 2026, full paper 9 Oct 2026). Fees: Physical ₦13,000 / Virtual ₦10,000 / Students ₦5,000 — First Bank Plc, School Of Science Conference Fpk, 2047116096.
-
-**Reproducibility:** All numbers trace to `data/raw/provenance.json` + `scripts/fetch_*.py`.

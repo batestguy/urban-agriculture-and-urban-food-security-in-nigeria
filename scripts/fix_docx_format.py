@@ -41,6 +41,24 @@ else:
 
 files['word/styles.xml'] = styles.encode()
 
+# 1b) Patch table/caption/bibliography to single spacing (save pages) — keep Normal 1.5
+styles2 = files['word/styles.xml'].decode()
+for sid in ["Table", "Caption", "Bibliography", "TOC"]:
+    pat = rf'(<w:style[^>]*w:styleId="[^"]*{sid}[^"]*"[^>]*>.*?</w:style>)'
+    def repl_sid(m, sid=sid):
+        txt = m.group(1)
+        # force single spacing inside this style
+        if 'w:line="360"' in txt:
+            txt = txt.replace('w:line="360"', 'w:line="240"')
+        elif 'w:spacing' not in txt:
+            txt = txt.replace('</w:pPr>', '<w:spacing w:line="240" w:lineRule="auto"/></w:pPr>', 1)
+        else:
+            # add line where missing
+            txt = txt.replace('<w:spacing', '<w:spacing w:line="240" w:lineRule="auto"', 1) if 'w:line=' not in txt else txt
+        return txt
+    styles2 = re.sub(pat, repl_sid, styles2, flags=re.S)
+files['word/styles.xml'] = styles2.encode()
+
 # 2) Patch document.xml sectPr for 1 inch margins (1440 twips) if absent
 doc_xml = files['word/document.xml'].decode()
 if 'w:pgMar' not in doc_xml:
