@@ -83,28 +83,41 @@ D:\YohannaPaper\
 ├── PROGRESS.md                     # dated log (mirrored here and on GitHub)
 ├── .gitignore
 ├── data/
-│   ├── raw/          # frozen API dumps + provenance.json  (.gitkeep)
-│   ├── processed/    # cleaned / joined layers            (.gitkeep)
-│   └── external/     # GADM/HDX shapefiles (not committed if large)
+│   ├── raw/          # frozen API dumps + provenance.json  (.gitkeep) — 484 OSM pts, 75 WB, 1,825 NASA, 775 LGAs
+│   ├── processed/    # cleaned / joined layers            (.gitkeep) — osm_urban_ag.gpkg, nasa_annual.csv, worldbank_ng_wide.csv
+│   └── external/     # GADM/HDX shapefiles — gadm41_NGA_2.shp (4.56 MB, 775 LGAs)
 ├── scripts/
-│   ├── fetch_osm_urban_ag.py
+│   ├── fetch_osm_urban_ag.py       # per-tag Overpass, 3 endpoints, dedup
 │   ├── fetch_worldbank.py
 │   ├── fetch_nasa_power.py
-│   └── fetch_fao.py
+│   ├── fetch_fao.py
+│   ├── fix_docx_format.py          # TNR 12pt 1.5, 1in margins, tables single
+│   └── compact_tables.py           # Table 5–6 compaction for 12 pp
 ├── analysis/
 │   └── spatial/
-│       ├── 01_clean.R
-│       ├── 02_spatial_stats.R
-│       └── 03_maps.R
+│       ├── 01_clean.R              # → osm_urban_ag.gpkg + nasa_annual.csv
+│       ├── 02_spatial_stats.R      # → results/lga_lisa.gpkg (Moran/LISA)
+│       ├── 03_maps.R
+│       ├── 04_extra_figs.R         # → density_vs_rainfall, top10
+│       ├── run_regression.R        # → Tables 5–6 (log area + climate)
+│       └── check_sensitivity.R     # → rook vs queen, Kano-excluded
 ├── manuscript/
-│   ├── manuscript.qmd   # Quarto source → docx (TNR 12pt, 1.5, ≤12pp)
+│   ├── manuscript.qmd   # Quarto source → docx (TNR 12pt, 1.5, ≤12pp, 2,307 w, 12 pdf pp)
 │   ├── _quarto.yml
-│   ├── references.bib
-│   └── manuscript.docx  # generated — the submission artifact
+│   ├── references.bib   # 20 refs (50% ≥2022)
+│   └── manuscript.docx  # generated — the submission artifact (470 KB, 12 pp)
 ├── docs/
 │   ├── theme-verification.md
+│   ├── section-scores.md          # 0–5 per section, overall 5.0
+│   ├── methodology.qmd            # detailed methodology source (typst)
+│   ├── methodology.pdf            # 10 pp, 406 KB, equations + layman boxes
+│   ├── methodology.typ            # typst intermediate
+│   ├── references.bib             # copy for typst root
 │   └── flyer-transcription.md
-├── references/           # PDFs / notes
+├── results/
+│   ├── lga_lisa.gpkg              # 775 LGAs + density, lisa_I/p, quad
+│   ├── top10_density.csv
+│   └── figures/                   # 2 figs at 2in (lisa_map, density_vs_rainfall) + 4 archived
 ├── Screenshot 2026-08-25 054719.png
 └── WhatsApp Image 2026-08-24 at 9.23.15 PM.jpeg
 ```
@@ -115,12 +128,13 @@ D:\YohannaPaper\
 
 ## 5. Progress Log
 
-See **`PROGRESS.md`** for dated entries. Latest snapshot:
+See **`PROGRESS.md`** for dated entries. Latest snapshot (2026-08-26):
 
 - **2026-08-25 06:07 UTC** — GitHub repo created: `batestguy/urban-agriculture-and-urban-food-security-in-nigeria` (public). Local `D:\YohannaPaper` initialized, `safe.directory` set to `D:/YohannaPaper`, remote `origin` added.
-- **2026-08-25** — Workspace scaffolded (data/scripts/analysis/spatial/manuscript/docs), `.gitignore` + placeholder `.gitkeep`s, API fetch scripts stubbed, Quarto manuscript template created with flyer-compliant Word styling.
-- **2026-08-25** — Theme verification completed (sub-theme 6 primary / 10,13 secondary / 17 fallback) — documented in `docs/theme-verification.md`.
-- **Next:** Run `scripts/fetch_osm_urban_ag.py --city Abuja --out data/raw/osm_abuja.csv` + World Bank fetch → `data/raw/worldbank_ng.csv`; then `Rscript analysis/spatial/01_clean.R`.
+- **2026-08-25** — Workspace scaffolded, theme verification (sub-theme 6 primary / 10,13 secondary) — `docs/theme-verification.md`.
+- **2026-08-26 03:19 UTC** — Phase 2–3: GADM 775 LGAs (4.56 MB) + clean → `nasa_annual.csv` + Moran $I_{density}=0.300$ ($z=17.6$) + LISA + maps; Phase 4–5: manuscript 2,307 w → 12 pdf pages (TNR 12pt 1.5) + 2 figs 2in + 4 tables compact + 20 refs.
+- **2026-08-26 05:21 UTC** — **Detailed methodology PDF** `docs/methodology.pdf` (10 pp, 406 KB, typst) with equations (1)–(5) and layman boxes for every step from API downloads to regression — `quarto render docs/methodology.qmd --to typst` → `docs/methodology.pdf` (see §8).
+- **Next:** Final Word proof `manuscript/manuscript.docx` (`File→Info` 12 pp) → email abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (First Bank 2047116096).
 
 ---
 
@@ -157,17 +171,28 @@ git -C "D:\YohannaPaper" push origin master  # or main, depending on init
 
 ## 7. Submission Checklist (from flyer)
 
-- [ ] Abstract 150–300w + ≤6 keywords — email to `fpksstconf2026@gmail.com` by **5 Oct 2026**
-- [ ] Full manuscript `manuscript/manuscript.docx` — TNR 12pt, 1.5 spacing, **≤12 pages** — by **9 Oct 2026**
-- [ ] Figures/tables within page limit; references formatted; ethics & reflection sections included (Hull Ch 3 criteria)
-- [ ] All numbers/figures reproducible from `data/raw/provenance.json` + scripts
+- [x] Abstract 150–300w + ≤6 keywords — email to `fpksstconf2026@gmail.com` by **5 Oct 2026** — **158 w, 6 keywords** in `manuscript/manuscript.qmd:7-9`
+- [x] Full manuscript `manuscript/manuscript.docx` — TNR 12pt, 1.5 spacing, **12 pdf pages** (2,307 w, 470 KB, 2 figs 2in + 4 tables compact) — **at limit** via `scripts/fix_docx_format.py` — by **9 Oct 2026**
+- [x] Figures/tables within page limit; references formatted (20 refs, 50% ≥2022); ethics & positionality plus process reflection included (paragraph form, no Hull, 0 bullets)
+- [x] All numbers/figures reproducible from `data/raw/provenance.json` + scripts (`provenance.json` 16 entries, `R 4.5.2` pinned)
+- [x] Detailed methodology **PDF** `docs/methodology.pdf` (10 pp, 406 KB, typst) with equations (1)–(5) and layman boxes for every step from API downloads to regression — see §8
 
 ---
 
-## 8. References & Contact
+## 8. Detailed Methodology — Equations and Layman Explanations
+
+**PDF:** [`docs/methodology.pdf`](docs/methodology.pdf) (10 pages, 406 KB, typst, toc, numbered sections) — **companion to the 12-page conference paper**. Covers every step with **formal equations** and **plain-English blue boxes**: World Bank/Overpass/NASA POWER/FAOSTAT/GADM downloads (endpoints, scripts, why each source, 484 OSM points, 75 World Bank rows, 1,825 NASA daily, 775 LGAs), cleaning (`01_clean.R` → `osm_urban_ag.gpkg`, `nasa_annual.csv`), area/density (`n/area`, GEOS spherical, 11.6–10,358 km²), weight matrix $\mathbf{W}$ queen vs rook ($I$ 0.300 vs 0.306), Global Moran $I$ (Eq.2, $z$), LISA $I_i$ (Eq.3, HH/LL), lag $y=\rho Wy+X\beta+\varepsilon$ (Eq.4) vs error $y=X\beta+u$ (Eq.5), estimates Tables 5–6 (775 $N$ $\rho=0.419$ AIC −2577.5; 34 $N$ PRECTOT $p=0.018$), Spearman, top-10, maps, reproducibility (`R 4.5.2`, `ds-general` 3.12, seeds, `provenance.json`), ethics/positionality, and re-run commands.
+
+**Build:** `quarto render docs/methodology.qmd --to typst` → `docs/methodology.pdf` (requires `docs/references.bib` copy of `manuscript/references.bib` for typst project-root access). Source `docs/methodology.qmd` (22307 B) is fully commentable.
+
+**Why separate PDF:** Conference paper must stay ≤12 pp and paragraph-focused (0 bullets, no Hull); this PDF is the **audit trail** for reviewers who want every equation and why.
+
+---
+
+## 9. References & Contact
 
 - Conference contacts: +234(0)7066118734 | +2349095355158 | +234(0)7057200157
 - Flyer: `WhatsApp Image 2026-08-24 at 9.23.15 PM.jpeg` — Bank: First Bank Plc, *School Of Science Conference Fpk*, **2047116096**
 - Prior Hull marking: `Screenshot 2026-08-25 054719.png`
 
-*Last updated: 2026-08-25 — Progress mirrored on Drive D (`D:\YohannaPaper\PROGRESS.md`) and GitHub (this README).*
+*Last updated: 2026-08-26 — Progress mirrored on Drive D (`D:\YohannaPaper\PROGRESS.md`) and GitHub (this README). Methodology PDF `docs/methodology.pdf` (10 pp) added as companion to 12-page conference paper.*

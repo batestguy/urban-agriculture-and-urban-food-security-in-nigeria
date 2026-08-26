@@ -1,0 +1,346 @@
+---
+title: "Detailed Methodology — Urban Agriculture and Urban Food Security in Nigeria"
+subtitle: "From frozen API downloads to spatial regression: equations, layman explanations, and why each step matters"
+author: "Yohanna — batestguy"
+date: last-modified
+date-format: "D MMMM YYYY"
+format:
+  typst:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    papersize: a4
+    margin:
+      top: 25mm
+      bottom: 25mm
+      x: 25mm
+    fontsize: 11pt
+    line-length: 1.15
+    block-spacing: 1.2em
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+---
+
+::: {.callout-note title="How to use this document" appearance="simple" icon=false}
+This is the **technical companion** to the conference paper `manuscript/manuscript.qmd` (12 pp, TNR 12pt 1.5, ≤12 pages, abstract 5 Oct / full paper 9 Oct 2026 to `fpksstconf2026@gmail.com`). It documents **every step from frozen API downloads to final maps and regressions**, with **formal equations** and **plain-English boxes** explaining *what* was done and *why*. All numbers trace to `data/raw/provenance.json` (16 entries) and `scripts/fetch_*.py` → `analysis/spatial/*.R` on `R 4.5.2` / `ds-general` Python 3.12. The conference paper is the concise 12-page narrative; this file is the reproducible audit trail.
+:::
+
+# Overview and reproducibility contract
+
+## Pipeline at a glance
+
+```{mermaid}
+flowchart TD
+    A[APIs: Overpass / World Bank / NASA POWER / FAOSTAT / GADM] --> B[scripts/fetch_*.py → data/raw/*.csv + provenance.json]
+    B --> C[analysis/spatial/01_clean.R → data/processed/*.gpkg/.csv]
+    C --> D[analysis/spatial/02_spatial_stats.R → results/lga_lisa.gpkg (Moran/LISA)]
+    D --> E[analysis/spatial/03_maps.R + 04_extra_figs.R → results/figures/*.png]
+    D --> F[analysis/spatial/run_regression.R → Tables 5–6 (log area + climate)]
+    E & F --> G[manuscript/manuscript.qmd → manuscript.docx (Word) + this PDF]
+```
+
+::: {.callout-tip title="In plain English: why freeze?" appearance="simple" icon=false}
+APIs change daily. If we analysed live data, results would not be reproducible. We **query each API once**, save the response to `data/raw/*.csv`, and record the URL, timestamp and licence in `data/raw/provenance.json`. All later analysis reads **only the frozen CSVs**. Anyone can re-run the analysis without network access and get the same numbers.
+:::
+
+**Environments (see `ENVIRONMENTS.md`):** `R 4.5.2` with `sf 1.1.2` (GEOS 3.14.1/GDAL 3.12.1/PROJ 9.7.1, `sf_use_s2(TRUE)`), `spdep 1.4.2`, `spatialreg 1.4.3`, `terra 1.9.46`, `dplyr 1.2.1`, `ggplot2 4.0.3`; Python `ds-general` 3.12 (`pandas` 2.2.3, `requests` 2.34.2, `numpy` 1.26.4). Random seeds set (`set.seed(1)`). Git repo `D:\YohannaPaper` ↔ GitHub `batestguy/urban-agriculture-and-urban-food-security-in-nigeria` (branch `master`).
+
+**Study Area:** Five cities maximising agro-ecological variation — Abuja (planned capital, Guinean savanna), Lagos (coastal megacity), Kano (Sahelian), Port Harcourt (humid Niger Delta), Gombe (savanna, host). LGAs (GADM v4.1, 775 units) are the areal unit. Hypotheses: **H1** density is clustered ($I>0$); **H2** density increases with aridity (lower PRECTOT, higher T2M); **H3** density declines with LGA area.
+
+# Data acquisition: what, how, why
+
+## 2.1 World Bank Indicators API — national backdrop
+
+**What:** Three indicators for Nigeria (`NG`) 2000–2024:
+
+* `SP.URB.TOTL` — urban population (total)
+* `AG.PRD.FOOD.XD` — food production index (2004–06 = 100)
+* `SN.ITK.DEFC.ZS` — prevalence of undernourishment (%)
+
+**How:** `scripts/fetch_worldbank.py` loops `https://api.worldbank.org/v2/country/NG/indicator/{code}?format=json&per_page=100&date=2000:2024`, parses JSON `value`, writes long-format `data/raw/worldbank_ng.csv` (75 rows, 25 per indicator, 2 NAs per indicator) and appends to `provenance.json` with URL, `n`, `timestamp_utc`, `license: CC BY-4.0`.
+
+::: {.callout-note title="In plain English" appearance="simple" icon=false}
+The World Bank API is the safest starting point (no auth, stable). We began here to verify the pipeline before riskier Overpass calls. National aggregates cannot be joined to LGAs, so they are used as *context* (urbanisation 146.5M in 2024, food index 119.9 in 2022, undernourishment 19.9% in 2023) rather than outcomes; LGA-level undernourishment will come from DHS/NLSS in extensions [@worldbank2024; @fao2023].
+:::
+
+**Why these indicators:** They directly operationalise *urban food security* (population pressure, production, undernourishment) at the only openly-available temporal resolution for Nigeria.
+
+**Failure mode:** If `SN.ITK.DEFC.ZS` were >50% NA, we would drop it as outcome — here only 2 NAs, usable.
+
+## 2.2 OpenStreetMap Overpass API — urban agriculture footprints
+
+**What:** `landuse` $\in$ {allotments, farmland, farmyard} + `leisure=garden` — OSM's tagging for cultivated urban land. Five city bounding boxes (Abuja, Lagos, Kano, Port Harcourt, Gombe).
+
+**How:** `scripts/fetch_osm_urban_ag.py` builds **per-tag** queries (not a 4-tag union) to avoid Overpass `504`/`406`:
+
+```sql
+[out:json][timeout:30];
+(
+  nwr["landuse"="allotments"](bbox);
+  nwr["landuse"="farmland"](bbox);
+  nwr["landuse"="farmyard"](bbox);
+  nwr["leisure"="garden"](bbox);
+);
+out center tags;
+```
+
+Executed sequentially with `sleep 1` per tag, `sleep 2` per city, three fallback endpoints (`overpass-api.de`, `kumi.systems`, `openstreetmap.fr`), `User-Agent: YohannaPaper/1.0`, `Content-Type` header fixed (initial 406 error). Deduplicated by `osm_type+osm_id`, giving **484 rows** (Kano 189, Lagos 130, Port Harcourt 88, Gombe 45, Abuja 32) plus per-city CSVs and `osm_gombe_test.csv` (45 rows test). Provenance ODbL, 5 city entries + 3 zero-row retries (406→504 mitigation) in `provenance.json`.
+
+::: {.callout-tip title="In plain English: why per-tag?" appearance="simple" icon=false}
+A single query asking for all four tags at once timed out (90s, `504`) and sometimes returned `406 Not Acceptable` without a proper `User-Agent`. Splitting into four small queries (30s each) and trying three servers reliably returns data. Deduplication ensures a farm tagged both `farmland` and `farmyard` is counted once.
+:::
+
+**Why OSM:** Only openly-licensed, georeferenced source for *intra-urban* cultivated patches at LGA resolution; completeness varies (Kano highest, Abuja lowest) — documented as limitation and mitigated by density normalisation and Kano-excluded sensitivity.
+
+## 2.3 NASA POWER API — agro-climate
+
+**What:** Daily `T2M` (°C), `PRECTOTCORR` (mm, bias-corrected), `RH2M` (%) for 2023 (`20230101–20231231`), `community=AG`, for five city centroids:
+
+* Abuja 9.0765°N, 7.3986°E; Lagos 6.5244, 3.3792; Kano 12.0022, 8.592; Port Harcourt 4.8156, 7.0498; Gombe 10.2896, 11.1677.
+
+**How:** `scripts/fetch_nasa_power.py` loops `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&latitude={lat}&longitude={lon}&start=20230101&end=20231231&format=JSON`, writes `data/raw/nasa_power_{city}.csv` (365 rows each, 1,825 total). Provenance 5 entries. Annual means/totals in `data/processed/nasa_annual.csv` via `analysis/spatial/01_clean.R`: Abuja 25.9°C/1,031 mm/70.1%, Gombe 27.1/862/53.4, Kano 27.3/404/42.1, Lagos 26.8/1,726/85.4, Port Harcourt 26.2/1,891/87.7.
+
+::: {.callout-note title="In plain English" appearance="simple" icon=false}
+NASA POWER's AG community product is designed for agricultural applications and is validated for West Africa [@stackhouse2023]. The 2023 window matches the OSM freeze year; a multi-year window is the next step. Contrasts (404 mm Kano vs 1,891 mm Port Harcourt) provide the gradient to test **H2** (aridity).
+:::
+
+## 2.4 FAOSTAT API — food-security stub
+
+**What:** `https://fenixservices.fao.org/faostat/api/v1/en/data/FS?area=159` (Nigeria).
+
+**How:** `scripts/fetch_fao.py` → HTTP 521 during freeze → retained **1-row stub** `data/raw/fao_food_security.csv` with `status: http_521_stub` in `provenance.json` and note to replace with manual `data/external/faostat_food_security.csv` per `data/external/README.md`. Explicitly documented as limitation; not used in models.
+
+## 2.5 GADM administrative boundaries — spatial framework
+
+**What:** GADM v4.1 `https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_NGA_shp.zip` (3.47 MB zip) → `gadm41_NGA_2.shp` (LGA level 2) + `.dbf` + `.shx` + `.prj`/`.cpg`.
+
+**How:** Downloaded, extracted to `data/external/gadm41_NGA_2.*` (4.56 MB `.shp` + 0.13 MB `.dbf`, 5.1 MB in R, <50 MB → committed), verified `sf::st_read` → 775 LGAs (nominal 774, one extra documented), 14 columns (`GID_2`, `GID_0`, `COUNTRY`, `GID_1`, `NAME_1`, `NAME_2`…), CRS `EPSG:4326` (`st_crs`), `st_is_valid` 775/775. Provenance 16th entry `CC BY 4.0`. Level 0/1 shapefiles deleted to keep repo lean.
+
+::: {.callout-tip title="In plain English: why GADM?" appearance="simple" icon=false}
+GADM is the standard open administrative boundary for Nigeria (774 LGAs, here 775 due to version artefact). Using LGAs makes results *actionable* — zoning decisions are made at LGA level — and matches the resolution of `spatialreg` areal models.
+:::
+
+# Cleaning and preparation (`analysis/spatial/01_clean.R`)
+
+## 3.1 OSM → `sf` points → GeoPackage
+
+```r
+osm <- read_csv("data/raw/osm_urban_ag.csv")
+osm_sf <- st_as_sf(filter(osm, !is.na(lat), !is.na(lon)), coords=c("lon","lat"), crs=4326)
+st_write(osm_sf, "data/processed/osm_urban_ag.gpkg")
+```
+
+Filters NA coordinates, projects to WGS84, writes 484 points.
+
+## 3.2 World Bank long → wide
+
+```r
+wb_wide <- wb %>% filter(!is.na(value)) %>% select(indicator, date, value) %>%
+  pivot_wider(names_from=indicator, values_from=value)
+write_csv(wb_wide, "data/processed/worldbank_ng_wide.csv")
+```
+
+Gives 25 rows (2000–2024) × 3 indicators.
+
+## 3.3 NASA daily → annual
+
+```r
+nasa_all <- bind_rows(lapply(Sys.glob("data/raw/nasa_power_*.csv"), function(f){
+  city <- sub(".*nasa_power_(.*)\\.csv","\\1", basename(f))
+  df <- read_csv(f); names(df) <- tolower(names(df)); df$city <- city; df
+}))
+nasa_annual <- nasa_all %>% group_by(city) %>%
+  summarise(n_days=n(), t2m_mean=mean(t2m, na.rm=TRUE),
+            prectot_sum=sum(prectotcorr, na.rm=TRUE),
+            rh2m_mean=mean(rh2m, na.rm=TRUE))
+write_csv(nasa_annual, "data/processed/nasa_annual.csv")
+```
+
+Annual means/totals for Table 2; retained as LGA covariates via state mapping (FCT→Abuja, Kano→Kano, Lagos→Lagos, Rivers→Port Harcourt, Gombe→Gombe) for 34 LGAs with ≥1 point.
+
+::: {.callout-note title="In plain English: why these aggregates?" appearance="simple" icon=false}
+Daily climate is too noisy for an annual allotment study. Summarising to *mean temperature* and *total rainfall* gives one number per city that can be compared to allotment density. The 34 LGAs with points are assigned their state's city climate — a proxy until LGA-level rasters are integrated.
+:::
+
+# Spatial framework and descriptive
+
+## 4.1 Area and density
+
+$$
+\text{density}_i = \frac{n_i}{\text{area}_{i,km^2}}, \quad \text{area}_{i,km^2} = \frac{\text{st\_area}(\text{LGA}_i)}{10^6}
+$$
+
+Computed with `sf` GEOS spherical geometry (appropriate for 4–13°N). LGA areas 11.6–10,358 km² (median 697 km²); ten-fold variation means raw counts $n$ conflate intensity with size — density corrects this, and $I_{counts}=0.158$ rises to $I_{density}=0.300$ upon normalisation.
+
+::: {.callout-tip title="In plain English" appearance="simple" icon=false}
+A large rural LGA could have 10 allotments spread thinly, while a small urban LGA has 10 allotments densely packed. Counts treat them equally; density reveals the urban concentration that matters for zoning. Tarauni (23.6 km², 1.06 km⁻²) vs Ikorodu (369.5 km², 0.14 km⁻²) illustrates why density, not counts, is policy-relevant.
+:::
+
+## 4.2 Join and count
+
+```r
+joined <- st_join(lga, osm)  # left join: each LGA gets its intersecting points
+dens <- joined %>% st_drop_geometry() %>% filter(!is.na(city)) %>%
+  count(GID_2) %>% rename(lga=GID_2, n=n)
+lga <- left_join(lga, dens, by=c("GID_2"="lga")); lga$n[is.na(lga$n)] <- 0
+lga$area_km2 <- as.numeric(st_area(lga))/1e6
+lga$density <- lga$n / pmax(lga$area_km2, 1)
+```
+
+**Bug audit:** Early `count(NAME_2)` spuriously gave 775 LGAs ≥1 point (all); corrected to `count(GID_2)` after `filter(!is.na(city))` → valid 39 LGAs (5.0%) — documented in `PROGRESS.md`.
+
+# Spatial dependence: Moran's I and LISA
+
+## 5.1 Weight matrix $\mathbf{W}$
+
+$$
+w_{ij} = \begin{cases}1 &\text{if LGAs } i,j \text{ share edge or vertex (queen)}\\0 &\text{otherwise}\end{cases}, \qquad w^*_{ij}=w_{ij}/\sum_j w_{ij} \tag{1}
+$$
+
+Row-standardised queen contiguity via `spdep::poly2nb(queen=TRUE)` → `nb2listw(style="W")`. Rook (edge only) yields $I_{density}=0.306$ vs queen $0.300$ (both $z>17.5$, $p<0.001$), confirming robustness.
+
+::: {.callout-note title="In plain English" appearance="simple" icon=false}
+$\mathbf{W}$ encodes *who is neighbour to whom*. Queen counts diagonal neighbours (like a queen in chess); rook counts only edge neighbours. Row-standardising means each LGA's neighbours sum to 1, so a LGA with many neighbours does not dominate.
+:::
+
+## 5.2 Global Moran's I
+
+$$
+I = \frac{N}{W}\frac{\sum_i\sum_j w^*_{ij}(x_i-\bar{x})(x_j-\bar{x})}{\sum_i (x_i-\bar{x})^2},\quad E[I]=-\tfrac{1}{N-1},\quad z=\tfrac{I-E[I]}{\sqrt{\text{Var}[I]}} \tag{2}
+$$
+
+Tested with `spdep::moran.test` (randomisation, `zero.policy=TRUE`). $N=775$, $x$ is density or counts. Results: counts $I=0.158$ ($z=8.47$, $p<0.001$), **density $I=0.300$ ($z=17.61$, $p<0.001$)** — strong clustering, rejecting complete spatial randomness (CSR). Excluding Kano State ($N=731$) retains $I=0.274$ ($z=16.3$, $p<0.001$), so H1 is not Kano-driven.
+
+::: {.callout-tip title="In plain English" appearance="simple" icon=false}
+Moran's $I$ asks: *do similar values cluster?* $I\approx0$ means random scatter; $I>0$ means high values neighbour high, low neighbour low. Here $I=0.300$ is far above the $E[I]=-0.001$ expected under randomness, with $z=17.61$ — overwhelming evidence of clustering. Density clusters more than counts, proving area normalisation matters.
+:::
+
+## 5.3 LISA
+
+$$
+I_i = \frac{x_i-\bar{x}}{m_2}\sum_j w^*_{ij}(x_j-\bar{x}), \quad m_2 = N^{-1}\sum_i (x_i-\bar{x})^2 \tag{3}
+$$
+
+`spdep::localmoran` gives $I_i$ and $p_i$; quadrants HH/LL/HL/LH classified by $(x_i>\bar{x}, \text{lag}_i>\bar{\text{lag}})$ only when $p_i<0.05$, mapped in `results/figures/lisa_map.png` (HH red, LL blue). HH centres on Kano metropolis (Ungogo, Tarauni, Kumbotso ring) and Obio/Akpor (Rivers); LL spans sparsely-mapped savanna; HL/LH <10. Stored as `lisa_I`, `lisa_p`, `lisa_quad`, `lag_density` in `results/lga_lisa.gpkg`.
+
+# Spatial regression: from OLS to lag/error
+
+## 6.1 Why OLS is biased
+
+OLS assumes independent residuals. Table 3 rejects CSR, so residuals remain spatially autocorrelated, violating Gauss–Markov and biasing standard errors.
+
+## 6.2 Lag and error specifications
+
+$$
+y = \rho \mathbf{W} y + X\beta + \varepsilon \tag{4}
+$$
+
+Eq.4 is the **spatial lag**: neighbours' $y$ directly affects $y$ (spillover).
+
+$$
+y = X\beta + u,\; u = \lambda \mathbf{W} u + \varepsilon,\; \varepsilon\sim N(0,\sigma^2 I) \tag{5}
+$$
+
+Eq.5 is the **spatial error**: omitted spatially-structured covariates induce correlated errors.
+
+Estimated by ML (`spatialreg` 1.4.3). Model choice via AIC, likelihood-ratio $LR=2(\ell_{spatial}-\ell_{OLS})$, and Lagrange Multiplier $LM_{lag}$ vs $LM_{error}$ and robust $RLM$; residual Moran reported.
+
+::: {.callout-note title="In plain English" appearance="simple" icon=false}
+*Lag* says allotment density in a LGA depends on density in neighbouring LGAs (spillover). *Error* says something unmeasured (e.g., soil, market access) is spatially clustered and leaks into residuals. Both correct OLS by explicitly modelling $\mathbf{W}$.
+:::
+
+## 6.3 Estimates and model selection
+
+**Table 5. Density $y$ regressed on $\log(\text{area})$, $N=775$ LGAs.**
+
+| Model | log(area) | $\rho$ / $\lambda$ | AIC |
+|---|---|---|---:|
+| OLS | -0.0086 (0.0014)*** | — | -2485.2 |
+| Lag (Eq.4) | -0.0052 (0.0013)*** | $\rho=0.419$*** | **-2577.5** |
+| Error (Eq.5) | -0.0058 (0.0017)*** | $\lambda=0.419$*** | -2572.9 |
+
+*SE in parentheses; *** $p<0.001$; $LR=94.25$***. Lag preferred ($\Delta$AIC -4.6); residual $LM=48.2$ remains due to zero-inflation.*
+
+Negative $\log(\text{area})$ confirms **H3**: larger LGAs dilute density ($-0.005$ to $-0.009$). Positive $\rho$/$\lambda$ (0.42, $z\approx$9) quantifies spillover, validating OLS rejection.
+
+**Table 6. Density with climate, $N=34$ LGAs with ≥1 point and mapped state.**
+
+| Model | log(area) | PRECTOT | $\rho$ / $\lambda$ | AIC |
+|---|---|---|---|---:|
+| OLS | -0.0635* | -0.000085 | — | -10.51 |
+| Lag | -0.0797*** | -0.000135* | $\rho=-0.438$* | -12.39 |
+| Error | -0.0656*** | -0.000100* | $\lambda=-0.476$** | **-12.75** |
+
+*One isolate among 34 (queen). Error preferred ($\Delta$AIC -0.36).*
+
+Bivariate PRECTOT was marginal ($p=0.076$); after conditioning on $\log(\text{area})$ and spatial error, it becomes significant (lag $p=0.035$, error $p=0.018$), supporting **H2**: drier LGAs (Kano 404 mm vs Port Harcourt 1,891 mm) host higher density; the 1,487 mm contrast predicts 0.15 km⁻² (≈15% of Tarauni's 1.06). T2M remains n.s. Negative $\rho$/$\lambda$ reflects fragmented 34-sample (5 sub-graphs) — interpret cautiously — but AIC improves ~2 points and sharpens PRECTOT. Kano-excluded $N=21$ attenuates but does not reverse the sign, so H2 is not solely Kano-driven.
+
+::: {.callout-tip title="In plain English: what the tables say" appearance="simple" icon=false}
+*Table 5:* Small urban LGAs (Tarauni 23.6 km², 1.06 km⁻²) concentrate points; large Ikorodu (369 km², 0.14) dilutes — larger area → lower density, highly significant. The 0.42 $\rho$ means a LGA's density is strongly predicted by its neighbours' density.
+
+*Table 6:* After accounting for area and neighbours, *drier* LGAs have *higher* density — the 1,487 mm rainfall gap predicts a meaningful 0.15 km⁻² difference. Temperature doesn't matter once rainfall and area are controlled. The negative $\rho$ here is an artefact of the small, fragmented 34-sample; the key is that spatial models make rainfall significant whereas OLS did not.
+:::
+
+# Additional analyses
+
+## 7.1 Density vs climate and scale (Spearman)
+
+For 39 LGAs with ≥1 point (34 mapped), Spearman $\rho$ (ties, exact $p$ approximate): rainfall $\rho=-0.31$ ($p=0.076$) marginal, temperature $\rho=+0.44$ ($p=0.009$) significant — drier/hotter → denser (H2); Tarauni 23.6 km² 1.06 vs Ungogo 187 km² 0.48 supports H3. Figs. `density_vs_rainfall.png` (scatter, dashed OLS) and `climate_correlation.png` (matrix) illustrate; Table 4 top-10 LGAs (Tarauni 1.06, Shomolu 0.55, Ungogo 0.48…) shows density vs counts distinction (Ikorodu 53 points but 0.14 km⁻²).
+
+## 7.2 Maps
+
+`analysis/spatial/03_maps.R` + `04_extra_figs.R` produce `results/figures/osm_points.png` (484 points by city), `lisa_map.png` (HH red, LL blue), `density_hist.png` (zero-inflated, median 0, mean 0.62), `density_vs_rainfall.png`, `climate_correlation.png`, `density_by_state.png` (Kano median 0.15 km⁻² vs Lagos 0.14, Gombe 0.016, FCT 0.005) — all `ggplot2`/`sf`, 300 dpi.
+
+# Reproducibility, ethics, reflection
+
+**Reproducibility:** Every number traces to `data/raw/provenance.json` (timestamped URL/licence) and version-pinned code; `git log` shows `scripts/fetch_*.py` → `data/raw` → `R` → `quarto` → `manuscript.docx`/`docs/methodology.pdf`. No network in `R` — only frozen CSVs.
+
+**Ethics and positionality:** Open data (ODbL OSM, CC BY GADM/World Bank, NASA POWER) with attribution; no PII; public allotment centroids; auditable via `provenance.json`; authors have no residential positionality in LGAs, so inference requires community validation before zoning.
+
+**Process reflection (5 phases):** Phase 0 installed missing `spatialreg`; Phase 1 staged Overpass 406→504 per-tag fixes to obtain 484 points (isolated Gombe 45 test → full 189/130/88/45/32); Phase 2 found 775 vs nominal 774 LGAs (GADM version artefact) and deleted `NGA_0/1` to keep repo 4.7 MB; Phase 3 corrected `NAME_2`→`GID_2` bug (775→39 LGAs, 5%) and showed $I$ 0.158→0.300 and queen–rook 0.300→0.306 robustness; Phase 4–5 embedded 3–6 figs and trimmed 4,459→2,307 w to meet 12 pp. Iterative $z$ 8.47→17.61 demonstrated area normalisation is decisive.
+
+# How to re-run
+
+```pwsh
+# Python harvest (one-time)
+conda activate C:\Users\TOSHIBA\ds-general
+C:\Users\TOSHIBA\ds-general\python.exe scripts/fetch_worldbank.py --out data/raw/worldbank_ng.csv
+C:\Users\TOSHIBA\ds-general\python.exe scripts/fetch_osm_urban_ag.py --city Gombe --out data/raw/osm_gombe_test.csv
+# ... 5 cities ...
+
+# Download GADM LGA (if not present)
+# https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_NGA_shp.zip → data/external/gadm41_NGA_2.*
+
+# R pipeline
+Rscript analysis/spatial/01_clean.R          # → data/processed/*.gpkg
+Rscript analysis/spatial/02_spatial_stats.R  # → results/lga_lisa.gpkg (Moran/LISA)
+Rscript analysis/spatial/03_maps.R
+Rscript analysis/spatial/04_extra_figs.R
+Rscript analysis/spatial/run_regression.R
+Rscript analysis/spatial/check_sensitivity.R
+
+# Render
+quarto render manuscript/manuscript.qmd --to docx   # conference paper (12 pp)
+quarto render docs/methodology.qmd --to pdf       # this file
+# Fix Word TNR 12pt 1.5 if needed
+python scripts/fix_docx_format.py
+```
+
+**Page count check:**
+
+```pwsh
+# docx words → pages estimate
+python -c "import zipfile,re,pathlib; d=pathlib.Path('manuscript/manuscript.docx'); w=len(' '.join(re.findall(r'<w:t[^>]*>([^<]+)</w:t>', zipfile.ZipFile(d).read('word/document.xml').decode())).split()); print(w, round(w/250,1), round(w/300,1))"
+# Word COM actual pages
+python -c "import win32com.client; w=win32com.client.Dispatch('Word.Application'); d=w.Documents.Open(r'D:\YohannaPaper\manuscript\manuscript.docx'); print(d.ComputeStatistics(2)); d.Close(False); w.Quit()"
+# PDF actual pages
+soffice --convert-to pdf manuscript/manuscript.docx; python -c "from PyPDF2 import PdfReader; print(len(PdfReader('manuscript/manuscript.pdf').pages))"
+```
+
+# References
+
+::: {#refs}
+:::
+

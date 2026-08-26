@@ -137,6 +137,12 @@
 - **Verification:** `soffice --convert-to pdf` + `PyPDF2` =**12 pp** (was 20→13), `docx` 2,307 w + 2 figs (3in) + 4 tables (single) =12. Word COM still shows 14→12 after single-spacing tables; final 12.0 pp @300 (9.2 @250) matches flyer.
 - **Scores:** `docs/section-scores.md` remains 5.0 overall (Introduction 5, Methods 5, Results 5, Discussion 5, etc.) — not counted in manuscript 12 pp.
 
+## 2026-08-26 05:21 UTC — Detailed methodology PDF + README update
+
+- **PDF:** Created `docs/methodology.qmd` (22,307 B) → `quarto render --to typst` → `docs/methodology.pdf` **10 pp, 406 KB, typst** (was lualatex → Libertinus font + tlmgr timeout, switched to typst). Covers every step with **equations (1)–(5)** and **layman blue boxes**: World Bank 75 rows, OSM 484 pts (per-tag Overpass, 3 endpoints, dedup), NASA POWER 1,825 daily (5×365, 404–1,891 mm), FAOSTAT stub, GADM 775 LGAs, cleaning (`01_clean.R` → `osm_urban_ag.gpkg`, `nasa_annual.csv`), area/density ($n/\text{area}$, 11.6–10,358 km²), queen $\mathbf{W}$ vs rook ($I$ 0.300 vs 0.306), Global Moran Eq.2 ($z$), LISA Eq.3 (HH/LL), lag Eq.4 vs error Eq.5, Tables 5–6 (775 $\rho=0.419$ AIC −2577.5; 34 PRECTOT $p=0.018$), Spearman, top-10, maps, reproducibility, ethics/positionality, re-run commands. Includes mermaid pipeline, callouts, toc, numbered sections.
+- **Fix:** Copied `manuscript/references.bib` → `docs/references.bib` for typst project-root access (typst cannot read outside root), removed `csl: https://.../apa` (unknown style, set to default `apa`), switched `pdf-engine: lualatex` → `format: typst` (A4, 25mm margins, 11pt, 1.15). Rendered 10 pp via `typst` (was `lualatex` 120s+ timeout).
+- **README:** Updated `README.md:8` to add **§8 Detailed Methodology** (PDF link, 10 pp, equations + layman, build command) and refreshed `§4 Repository Structure` (added `docs/methodology.qmd/.pdf/.typ`, `docs/references.bib`, `docs/section-scores.md`, `results/*`, `analysis/spatial/04_extra_figs.R`, `run_regression.R`, `check_sensitivity.R`) and `§5 Progress Log` snapshot (2026-08-26) and `*Last updated: 2026-08-26*`.
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
@@ -153,6 +159,7 @@
 - [x] Review 2 04:00: Hull removed, bullets→paragraphs, regression Tables5–6 clean, discussion richer, scores 4.8 → 3519 w 11.7 pp
 - [x] Final polish 04:15: NUP, rook $I=0.306$, Kano-excluded $I=0.274$, positionality → 3599 w 12.0 pp
 - [x] Page-count trim 04:45: Word 19→12 pp, docx 3599→2307 w (2 figs 2in, 4 tables compact, refs 20, non-technical trimmed, technical untouched)
+- [x] Methodology PDF 05:21: `docs/methodology.qmd` → `docs/methodology.pdf` 10 pp, equations + layman, README §8
 - [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks
