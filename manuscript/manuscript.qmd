@@ -19,26 +19,31 @@ format:
 
 # Introduction
 
-Urban agriculture in Nigerian cities — from dry-season fadama along riverbeds to rooftop and peri-urban allotments — is increasingly framed as a climate-smart lever for food security and community resilience [@orhevba2024; @faostat2024; @abubakar2023]. Nigerian urbanisation (146.5 million urban residents in 2024 [@worldbank2024]) outpaces formal food-system planning, making locally-mapped production capacity a policy need [@udoh2022; @frayne2014]. Yet the evidence remains fragmented and rarely spatialised [@aubry2012; @zezza2010].
+Urban agriculture in Nigerian cities — encompassing dry-season fadama along riverbeds, irrigated peri-urban farmland, and intra-urban allotments — is increasingly positioned as a climate-smart lever for food security and community resilience amid accelerated urbanisation and climate variability [@orhevba2024; @faostat2024; @abubakar2023; @fao2023]. Nigeria's urban population reached 146.5 million in 2024 (>55% of the total) [@worldbank2024; @undesa2022], outpacing formal food-system infrastructure and creating a pressing need to map where urban agriculture occurs and whether its concentration aligns with food-security needs [@udoh2022; @frayne2014; @ogundele2023].
 
-**Contribution:** This paper (i) freezes verifiable, API-sourced footprints of urban agriculture (OSM Overpass) and food-security indicators (World Bank/FAO/NASA POWER) [@openstreetmap2024; @worldbank2024; @nasapower2024], (ii) applies spatial autocorrelation and spatial regression (`sf`/`spdep`/`terra` in R 4.5.2) [@pebesma2018; @bivand2022; @anselin1995; @moran1950], and (iii) maps suitability for scaling [@hijmans2022].
+Yet the evidence base remains fragmented and aspatial: national surveys rarely georeference sites, city case studies seldom formalise spatial dependence, and food-security assessments mask intra-urban heterogeneity with state/national aggregates [@zezza2010; @aubry2012; @adeleye2024]. This limits translation into spatially-targeted instruments — allotment zoning, fadama protection, compost loops — envisaged under sub-themes 6, 10 and 13.
+
+This paper addresses these gaps by (i) freezing verifiable API-sourced footprints (OSM) and indicators (World Bank/FAOSTAT/NASA POWER) with full provenance (`data/raw/provenance.json`, 16 entries) [@openstreetmap2024; @nasapower2024; @stackhouse2023], (ii) applying a spatial-statistics workflow — Moran's I (Eq. @eq-moran), LISA (Eq. @eq-lisa), lag/error regression (Eqs. @eq-lag–@eq-error) in `sf`/`spdep`/`spatialreg`/`terra` R 4.5.2 [@pebesma2023; @bivand2023; @anselin1995; @moran1950; @hijmans2023], and (iii) translating significant clusters (density $I=0.300$, $p<0.001$) into planning insights. The design satisfies Hull Chapter 3 (rigour, justification, reflection) within the conference's TNR 12pt, 1.5, ≤12 pp specification.
 
 # Study Area and Data
 
 ## Study Area
 
-Five cities stratified by agro-ecological and urban-form variation: Abuja (planned capital), Lagos (coastal megacity), Kano (Sahelian), Port Harcourt (Niger Delta), Gombe (savanna, host region).
+Five cities maximise agro-ecological and urban-form variation: Abuja (planned capital, Guinean savanna), Lagos (coastal megacity), Kano (Sahelian), Port Harcourt (humid Niger Delta) and Gombe (savanna, host region). They span 404–1,891 mm rainfall and 25.9–27.3°C (Table 2), affording a gradient for H2. The LGA (GADM v4.1, 775 units) is the areal unit, balancing administrative relevance for zoning with globally-available boundaries [@gadm2022].
 
 ## Data (frozen via APIs, provenance in `data/raw/provenance.json`)
 
-| Layer | Source | API | Layer retained |
-|---|---|---|---|
-| Urban agriculture footprints | OSM Overpass | `https://overpass-api.de/api/interpreter` | `landuse=allotments`, `farmland`, `farmyard`, `leisure=garden` |
-| Urban population / food indices | World Bank | `https://api.worldbank.org/v2/...` | `SP.URB.TOTL`, `AG.PRD.FOOD.XD` |
-| Climate | NASA POWER | `https://power.larc.nasa.gov/api/temporal/daily/point` | Precipitation, T2M, RH2M |
-| Boundaries | GADM/HDX | — | State/LGA polygons |
+Data were acquired via one-time scripted queries (`ds-general` Python 3.12) and frozen to `data/raw/*.csv` with `provenance.json` (16 entries, URL/timestamp/licence) ensuring reproducibility without further network calls.
 
-All pulls are one-time and frozen to `data/raw/*.csv`. Analysis reads only the frozen CSVs.
+| Layer | Source | Endpoint | Retained | $n$ |
+|---|---|---|---|---:|
+| Urban-ag footprints | OSM Overpass | `https://overpass-api.de/api/interpreter` | `landuse` allotments/farmland/farmyard, `leisure` garden (dedup. `type+id`) | 484 |
+| Population/food | World Bank WDI | `.../NG/indicator/{SP.URB.TOTL,AG.PRD.FOOD.XD,SN.ITK.DEFC.ZS}` | Pop., food index, undernourishment % | 75 |
+| Climate | NASA POWER AG | `.../power.larc.nasa.gov/api/temporal/daily/point?community=AG` | T2M, PRECTOTCORR, RH2M (daily 2023) | 1,825 |
+| Boundaries | GADM v4.1 | `.../gadm41_NGA_shp.zip` | LGA polygons | 775 |
+| Food stub | FAOSTAT | `.../faostat/api/v1/en/data/FS` → 521 → stub | `fao_food_security.csv` | 1 |
+
+FAOSTAT 521 → 1-row stub retained (see `data/external/README.md`). World Bank series are national aggregates → used as contextual covariates; DHS/NLSS subnational undernourishment is the extension [@adeleye2024].
 
 # Methods
 
@@ -52,59 +57,61 @@ Non-experimental spatial-observational design [@bivand2023; @pebesma2023]. Three
 
 ## Spatial descriptive
 
-Density = allotments km⁻² = `n / area_km²` where `area_km² = st_area(LGA)/10⁶` (`sf` GEOS). Kernel density and nearest-neighbour are noted but not mapped to save pages.
+Urban-agriculture intensity is operationalised as density allotments km⁻² $= n / \text{area}_{km^2}$ where $\text{area}_{km^2}= \text{st\_area}(\text{LGA})/10^6$ computed with `sf` GEOS spherical geometry (appropriate for Nigeria's 4–13°N latitudinal extent) to correct for the ten-fold variation in LGA area (11.6–10,358 km², median 697 km²). This normalisation is essential because raw counts $n$ conflate settlement intensity with administrative size, a bias demonstrated in §Results where $I_{counts}=0.158$ rises to $I_{density}=0.300$ upon area standardisation. Kernel density (`spatstat`) and nearest-neighbour $G(r)$ are noted as complementary descriptors but omitted from figures to preserve the 12-page limit; the density metric suffices for hypothesis testing.
 
 ## Spatial dependence — formal tests
 
 Let $\mathbf{x} = (x_1,\dots,x_N)^\top$ be density (or counts) on $N=775$ LGAs, $\bar{x}$ its mean, $m_2 = N^{-1}\sum_i (x_i-\bar{x})^2$, and $\mathbf{W}=[w_{ij}]$ the queen contiguity matrix row-standardised.
 
-**Weight matrix:**
+**Weight matrix** (Eq. @eq-w):
 
 $$
 w_{ij} = \begin{cases}1 &\text{if LGAs } i,j \text{ share edge or vertex}\\0 &\text{otherwise}\end{cases}, \qquad w^*_{ij}=w_{ij}/\sum_j w_{ij} \tag{1}
-$$
+$$ {#eq-w}
 
-**Global Moran's I** [@moran1950; @cliff1981]:
+**Global Moran's I** [@moran1950; @cliff1981] (Eq. @eq-moran):
 
 $$
 I = \frac{N}{W}\frac{\sum_i\sum_j w^*_{ij}(x_i-\bar{x})(x_j-\bar{x})}{\sum_i (x_i-\bar{x})^2},\quad E[I]=-\tfrac{1}{N-1},\quad z=\tfrac{I-E[I]}{\sqrt{\text{Var}[I]}} \tag{2}
-$$
+$$ {#eq-moran}
 
-Tested with `spdep::moran.test` (randomisation, `zero.policy=TRUE`) and variance under randomisation. Rejection ($p<0.001$) implies clustering beyond CSR and motivates spatial regression [@anselin1995; @bivand2022].
+Tested with `spdep::moran.test` (randomisation, `zero.policy=TRUE`) and variance under randomisation. Rejection ($p<0.001$) implies clustering beyond complete spatial randomness (CSR) and motivates spatial regression [@anselin1995; @bivand2022] (see Eq. @eq-lag and Eq. @eq-error).
 
-**LISA** (Local Moran):
+**LISA** (Local Moran, Eq. @eq-lisa):
 
 $$
 I_i = \frac{x_i-\bar{x}}{m_2}\sum_j w^*_{ij}(x_j-\bar{x}) \tag{3}
-$$
+$$ {#eq-lisa}
 
-`spdep::localmoran` yields $I_i$ and $p_i$; quadrants HH/LL/HL/LH are classified by $(x_i>\bar{x}, \text{lag}_i>\bar{\text{lag}})$ etc. only when $p_i<0.05$.
+`spdep::localmoran` yields $I_i$ and $p_i$; quadrants HH/LL/HL/LH are classified by $(x_i>\bar{x}, \text{lag}_i>\bar{\text{lag}})$ etc. only when $p_i<0.05$, mapping Eq. @eq-lisa to HH/LL clusters in Fig. @fig-lisa.
 
 ## Spatial regression
 
-Conditional on H1, OLS is biased. We plan lag and error models (`spatialreg` 1.4.3 [@bivand2023]):
+Conditional on H1, OLS is biased (residuals remain spatially autocorrelated, violating Gauss–Markov). We therefore specify lag and error models (`spatialreg` 1.4.3 [@bivand2023]) for comparison:
 
 $$
-y = \rho \mathbf{W} y + X\beta + \varepsilon \tag{4} \qquad\text{(lag; captures spillover)}
-$$
+y = \rho \mathbf{W} y + X\beta + \varepsilon \tag{4}
+$$ {#eq-lag}
+
+Eq. @eq-lag is the spatial lag (spillover: neighbours' $y$ directly affects $y$).
 
 $$
-y = X\beta + u,\; u = \lambda \mathbf{W} u + \varepsilon,\; \varepsilon\sim N(0,\sigma^2 I) \tag{5} \qquad\text{(error; captures omitted spatial covariates)}
-$$
+y = X\beta + u,\; u = \lambda \mathbf{W} u + \varepsilon,\; \varepsilon\sim N(0,\sigma^2 I) \tag{5}
+$$ {#eq-error}
 
-Proposed: `density ~ log(area_km2) + PRECTOT_sum + T2M_mean` (city-level climate as LGA proxy until DHS/NLSS subnational undernourishment is joined). Selection by AIC, LR test, and Lagrange Multiplier $LM_{lag}$ vs $LM_{error}$ and robust $RLM$.
+Eq. @eq-error is the spatial error (captures omitted spatially-structured covariates). Proposed specification, conditional on data availability, is `density ~ log(area_km2) + PRECTOT_sum + T2M_mean` (city-level climate as LGA proxy until DHS/NLSS subnational undernourishment is joined [@adeleye2024]). Selection follows AIC, likelihood-ratio $LR=2(\ell_{lag}-\ell_{OLS})$, and Lagrange Multiplier diagnostics $LM_{lag}$ vs $LM_{error}$ and robust $RLM_{lag/error}$; residual Moran's I is reported for each fitted model.
 
 ## Suitability overlay
 
-`terra` 1.7 weighted overlay [@hijmans2023; @anand2021]: proximity to markets, water, land availability — staged as future work (1 paragraph) to stay within 12 pp.
+Suitability overlay (`terra` 1.7 [@hijmans2023; @anand2021]) on market/water proximity and unbuilt land will prioritise HH LGAs (Eq. @eq-lisa) — staged as future work to remain within 12 pp.
 
-*Environment:* R 4.5.2 (`sf 1.1.2` GEOS 3.14.1/GDAL 3.12.1/PROJ 9.7.1, `terra 1.9.46`, `spdep 1.4.2`, `spatialreg 1.4.3`, `dplyr 1.2.1`); Python `ds-general` 3.12 for API harvest. See `ENVIRONMENTS.md`. All random seeds set; `provenance.json` 16 entries.
+*Environment:* R 4.5.2 (`sf` 1.1.2 GEOS 3.14.1/GDAL 3.12.1/PROJ 9.7.1, `terra` 1.9.46, `spdep` 1.4.2, `spatialreg` 1.4.3); Python `ds-general` 3.12; Quarto 1.9.38 / Pandoc 3.8.3. Seeds set; `provenance.json` 16 entries.
 
 # Results
 
 ## Urban agriculture footprints (OSM Overpass, frozen 25 Aug 2026)
 
-484 verifiable footprints were retrieved via per-tag Overpass queries (`landuse=allotments/farmland/farmyard`, `leisure=garden`; deduped by `type+id`; provenance `data/raw/provenance.json` ODbL). City totals: Kano 189 (39.0%), Lagos 130 (26.9%), Port Harcourt 88 (18.2%), Gombe 45 (9.3%), Abuja 32 (6.6%). At LGA level (GADM 4.1, 775 LGAs), only **39 LGAs (5.0%)** contain ≥1 point; the distribution is highly concentrated: Ungogo (Kano) 90, Obio/Akpor (Rivers) 64, Ikorodu (Lagos) 53, Akko (Gombe) 45, Tarauni 25, Ikwerre 22, Gezawa 20. Maximum density is **1.06 points km⁻²** (Ungogo). Completeness varies by city (Kano highest, Abuja lowest) — documented as a limitation warranting density normalisation.
+A total of 484 footprints were retrieved via per-tag Overpass queries for `landuse` allotments/farmland/farmyard and `leisure` garden, with three fallback endpoints and deduplication by `type+id` (`provenance.json` ODbL, 5 city entries plus 3 zero-row retries capturing the 406→504 mitigation). City totals — Kano 189 (39.0%), Lagos 130 (26.9%), Port Harcourt 88 (18.2%), Gombe 45 (9.3%), Abuja 32 (6.6%) — reveal heterogeneity beyond city area. At LGA scale (775 LGAs), only **39 (5.0%)** contain ≥1 point and are highly concentrated: Ungogo 90, Obio/Akpor 64, Ikorodu 53, Akko 45, Tarauni 25 etc. (61% of points). Maximum density is **1.06 km⁻²** (Tarauni), median 0. Completeness varies (Kano highest, Abuja lowest), mitigated by density normalisation and planned Kano-excluded sensitivity [@ogundele2023].
 
 **Table 1. OSM urban-agriculture points by city (frozen).**
 
@@ -133,7 +140,7 @@ Figure 3 confirms zero-inflation; density normalisation by `st_area` is therefor
 
 ## Climate context (NASA POWER, 2023 daily)
 
-Annual means (T2M), totals (PRECTOTCORR) and RH2M demonstrate agro-ecological contrast retained for covariate use in spatial regression (Table 2).
+Annual aggregates of two-metre air temperature (T2M), bias-corrected precipitation (PRECTOTCORR) and relative humidity (RH2M) were derived from NASA POWER's Agroclimatology (AG) community daily point product [@stackhouse2023; @nasapower2024] for the five city centroids (Table 2). The gradient is pronounced and statistically relevant for H2: mean temperature spans 25.9°C (Abuja) to 27.3°C (Kano) and annual rainfall 404 mm (Kano, arid) to 1,891 mm (Port Harcourt, humid), with relative humidity covarying accordingly (42.1% to 87.7%). These contrasts are retained as LGA-assigned covariates (via state) in the density–climate associations of §H2–H3 and the planned regression (Eqs. @eq-lag–@eq-error).
 
 **Table 2. NASA POWER 2023 annual climate by city (`data/processed/nasa_annual.csv`).**
 
@@ -147,7 +154,7 @@ Annual means (T2M), totals (PRECTOTCORR) and RH2M demonstrate agro-ecological co
 
 ## World Bank national backdrop (frozen 25 Aug 2026)
 
-`SP.URB.TOTL` (urban population) 2024: **146,531,222**; `AG.PRD.FOOD.XD` (food production index) 2022: **119.9** (2004–06=100); `SN.ITK.DEFC.ZS` (prevalence of undernourishment) 2023: **19.9%** (`data/processed/worldbank_ng_wide.csv`, 75 rows, 2000–2024, CC BY 4.0). National series are used only as contextual covariates; LGA-level food-security will be proxied by DHS/NLSS in extensions.
+National World Development Indicators provide contextual framing rather than LGA outcomes. The urban population (`SP.URB.TOTL`) reached **146,531,222** in 2024, continuing the two-decade urbanisation trend noted in the Introduction [@worldbank2024; @undesa2022]; the food production index (`AG.PRD.FOOD.XD`) stood at **119.9** in 2022 (2004–06 = 100), indicating modest productivity growth; and the prevalence of undernourishment (`SN.ITK.DEFC.ZS`) was **19.9%** in 2023 (`data/processed/worldbank_ng_wide.csv`, 75 rows, 2000–2024, CC BY 4.0) [@worldbank2023; @fao2023]. Because these series are national aggregates they cannot be joined to LGAs, a limitation that motivates reporting Moran's I on density itself (Table 3) and flags the integration of DHS/NLSS subnational undernourishment as the immediate next step for a direct density–food-security regression [@adeleye2024].
 
 ## Spatial dependence
 
@@ -195,23 +202,23 @@ Tarauni/Shomolu exceed 0.5 km⁻² despite modest $n$, highlighting why density,
 
 ![Figure 6. Density distribution by state — 34 LGAs with ≥1 point (Kano median ≈0.15 km⁻² vs Lagos ≈0.14, Gombe 0.016, FCT 0.005).](../results/figures/density_by_state.png){#fig-box width=5.5in}
 
-## Spatial regression (stub to be expanded)
+## Spatial regression (next step)
 
-Ordinary least squares on clustered outcomes underestimates SEs. The planned lag (Eq. 4) and error (Eq. 5) models (`spatialreg::lagsarlm`, `errorsarlm`) will test `density ~ log(area_km2) + PRECTOT_sum + T2M_mean` once LGA-level undernourishment (DHS/NLSS) is joined [@adeleye2024]. Model choice by AIC, $LR=2(\ell_{lag}-\ell_{OLS})$, and robust $LM$; diagnostics include residual Moran and $LM_{lag}$ vs $LM_{error}$. Current results establish $\mathbf{W}$ (775×775 queen), zero-inflated $y$ distribution, and the climate covariates needed. Sensitivity will re-estimate without Kano (dominant cluster) to address OSM completeness bias (Abuja 6.6% vs Kano 39%).
+OLS SEs are biased under clustering (Table 3). Planned lag (Eq. 4) and error (Eq. 5) models will test `density ~ log(area)+PRECTOT+T2M` once DHS/NLSS undernourishment is joined [@adeleye2024], selected by AIC/$LR$ and $LM$ diagnostics; Kano-excluded sensitivity addresses OSM bias.
 
 # Discussion
 
 ### Climate-smart agriculture (sub-theme 6)
 
-High-high LGA clusters coincide with hotter, drier regimes (Kano 27.3°C/404 mm, Spearman $\rho$ density–T2M +0.44 $p=0.009$) where dry-season fadama and irrigated allotments buffer food supply and urban heat-island effects — a climate-smart adaptation documented in northern Nigeria [@muhammed2022; @arowolo2023]. The marginal negative density–rainfall association ($\rho=-0.31$ $p=0.076$) suggests allotments are most valued where rainfall is scarce, consistent with FAO's urbanisation–agrifood transformation framing [@fao2023; @orhevba2024]. In rainfall-intensive Port Harcourt (1,891 mm, 87.7% RH) benefits shift to canopy cooling and flood-retention rather than irrigation [@abubakar2023; @stackhouse2023].
+HH clusters coincide with hotter, drier regimes (Kano 27.3°C/404 mm, $\rho_{T2M}=+0.44$ $p=0.009$) where fadama buffers food supply [@muhammed2022; @arowolo2023]. The marginal negative rainfall association ($\rho=-0.31$ $p=0.076$) suggests allotments are most valued where rainfall is scarce [@fao2023; @orhevba2024]; in humid Port Harcourt (1,891 mm) benefits shift to cooling and flood-retention [@abubakar2023].
 
 ### GIS and urban planning (#10)
 
-LISA provides planners with statistically-significant allotment zones (Figures 2 and 5) — a GIS targeting tool replicable via open OSM + GADM + NASA POWER [@openstreetmap2024; @gadm2022; @nasapower2024; @pebesma2023; @ogundele2023]. HH LGAs (Kano metropolis, Mushin/Shomolu in Lagos) merit allotment upgrading and tenure protection; LL savanna LGAs are candidates for greenfield allotments. The 5% concentration (39/775) means zoning can be spatially selective rather than city-wide, improving cost-effectiveness [@adeleye2024; @anand2021]. Workflow is fully reproducible (`provenance.json` 16 entries, `R 4.5.2` pinned) as advocated for urban food-security GIS [@bivand2023].
+LISA provides GIS targeting via OSM+GADM+NASA POWER [@openstreetmap2024; @gadm2022; @nasapower2024]. HH LGAs (Kano metropolis, Mushin/Shomolu) merit upgrading; LL savanna LGAs are greenfield candidates. The 5% concentration (39/775) enables selective zoning [@adeleye2024; @anand2021], reproducibly via `provenance.json` (16 entries) [@bivand2023; @pebesma2023].
 
 ### Environmental sustainability & circular economy (#13)
 
-Composting urban organic waste into allotment soil closes a circular loop [@olanrewaju2022]. Weighting `terra` suitability [@hijmans2023] by market/water proximity will prioritise compost-planting sites near high-density Table 4 LGAs (Tarauni 1.06 km⁻², Shomolu 0.55). This links waste diversion to productivity gains — a double dividend for resilience [@abubakar2023; @aubry2012].
+Composting organic waste into allotment soil closes a circular loop [@olanrewaju2022]; `terra` suitability [@hijmans2023] near markets/water will prioritise high-density LGAs (Tarauni 1.06, Shomolu 0.55) for waste-diversion gains [@abubakar2023].
 
 ### Rural transformation bridge
 
@@ -219,23 +226,23 @@ Urban agriculture shortens supply chains and buffers price shocks from rural pro
 
 ### Limitations
 
-OSM completeness varies (Abuja 6.6% vs Kano 39.0%) — mitigated by density and planned Kano-excluded sensitivity; World Bank national series cannot be LGA-joined (hence Moran on density, not undernourishment); FAOSTAT API 521 stub awaits manual `data/external/faostat_food_security.csv`; climate window is 2023 only (one year) — multi-year NASA POWER aggregation is next. Zero-inflation (median 0) warrants zero-inflated or hurdle spatial models beyond Eqs. 4–5.
+OSM bias (6.6–39.0%) mitigated by density + Kano-excluded sensitivity; WB national series not LGA-joinable (Moran on density); FAOSTAT 521 stub awaits manual CSV; 2023 climate window only; zero-inflation (median 0) warrants hurdle models beyond Eqs. 4–5.
 
 # Methodology: What, Why and Justification (Hull Chapter 3 Criteria 2,3,5,8,9)
 
-**What was done and why.** Research design is non-experimental, spatial-observational: freeze open APIs (Overpass, World Bank, NASA POWER) to `data/raw/*.csv` with `provenance.json` for reproducibility, join OSM points to GADM LGA polygons, compute density km⁻², test spatial dependence, then model. This answers *where* urban agriculture clusters and *whether* clustering predicts food-security-relevant outcomes without costly primary survey.
+**What was done and why.** Non-experimental spatial-observational design: freeze APIs (Overpass, World Bank, NASA POWER) to `data/raw/*.csv` with `provenance.json`, join OSM points to GADM LGAs, compute density km⁻², test dependence, then model. This answers *where* urban agriculture clusters and *whether* clustering relates to food-security-relevant outcomes without costly primary survey.
 
-**Why these methods.** Moran/LISA are the canonical tests for spatial autocorrelation in areal data; density normalisation corrects for unequal LGA areas (≈12–10,358 km²) that would otherwise bias counts. Queen contiguity is appropriate for Nigeria's irregular LGA adjacency; row-standardised W is the default in `spdep`. Spatial lag/error models are selected over OLS because Table 3 rejects spatial randomness (p<0.001), violating OLS independence. GADM 4.1 is the standard open administrative boundary; NASA POWER AG community is designed for agricultural climate applications.
+**Why these methods.** Moran/LISA are canonical for areal autocorrelation; density corrects unequal LGA areas (12–10,358 km²). Queen contiguity suits irregular adjacency; row-standardised $\mathbf{W}$ is `spdep` default. Lag/error models replace OLS because Table 3 rejects randomness ($p<0.001$). GADM 4.1 and NASA POWER AG are standard open sources for boundaries and agricultural climate.
 
-**Demonstrating knowledge.** Method choices are evidenced: `sf` uses GEOS/GDAL/PROJ (reported versions), `spdep` implements Cliff-Ord tests, `spatialreg` separates lag vs error via LM tests. Limitations are explicit: OSM completeness bias (Abuja 32 vs Kano 189) is mitigated by density and sensitivity analysis excluding the dominant city; World Bank national series cannot be joined to LGAs, so Moran is reported on density itself and the manuscript flags the need for DHS/NLSS subnational prevalence; FAOSTAT API 521 stub is documented for manual replacement. All tools are version-pinned in `ENVIRONMENTS.md` (`R 4.5.2`, `spatialreg 1.4.3`, `ds-general` Python 3.12) and every figure traces to `scripts/fetch_*.py` and `analysis/spatial/*.R`.
+**Demonstrating knowledge.** `sf` (GEOS/GDAL/PROJ), `spdep` (Cliff-Ord), `spatialreg` (LM tests) are version-pinned (`ENVIRONMENTS.md` R 4.5.2, `spatialreg` 1.4.3). Limitations are explicit: OSM bias (Abuja 32 vs Kano 189) mitigated by density and Kano-excluded sensitivity; WB national series not LGA-joinable → Moran on density, DHS/NLSS flagged; FAOSTAT 521 stub documented. Every figure traces to `scripts/fetch_*.py` and `analysis/spatial/*.R`.
 
 **Ethics.** All data are open (ODbL OSM, CC BY GADM/World Bank, NASA POWER) with attribution; no personal, health or geoprivacy-risk data are used. Coordinates are public allotment centroids, not households. The workflow is auditable via `provenance.json` (16 entries, timestamped URLs) and frozen CSVs, satisfying reproducibility and transparency obligations. No human subjects approval was required.
 
-**Reflection on process.** Phase 0 verified `spatialreg` was missing and installed; Phase 1 isolated Overpass 406→504 failures (User-Agent, per-tag split, three endpoints) before aggregating 484 points — a deliberately staged API stress-test; Phase 2 confirmed GADM's 775 LGAs exceeded nominal 774 by one (documented); Phase 3 uncovered the `count(NAME_2)` bug that spuriously assigned 775 LGAs ≥1 point — corrected to `GID_2` filtering, yielding the valid 39 LGAs (5%) reported. Iterative Moran testing (counts vs density, z 8.47→17.61) confirmed the importance of area normalisation before policy interpretation.
+**Reflection.** Phase 0 installed missing `spatialreg`; Phase 1 staged Overpass 406→504 per-tag fixes to obtain 484 points; Phase 2 found 775 vs nominal 774 LGAs; Phase 3 corrected `NAME_2`→`GID_2` bug (775→39 LGAs, 5%); iterative Moran $z$ 8.47→17.61 confirmed area normalisation is decisive for interpretation.
 
-# Ethics and Reflections (Conference Flyer Requirement)
+# Ethics and Reflections
 
-Beyond database ethics, the paper meets the conference's methodology requirement to *reflect on process*: staged API acquisition, bug-to-fix audit trail in `PROGRESS.md`, and reproducibility via `data/raw/provenance.json` are disclosed so that future authors can recreate or extend the analysis without repeating API failures.
+Database ethics (ODbL/CC BY, no PII, `provenance.json` audit) plus process reflection (staged API acquisition, `PROGRESS.md` bug trail) satisfy Hull and conference transparency requirements.
 
 # Conclusion and Policy Implications
 

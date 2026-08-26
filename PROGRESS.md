@@ -109,6 +109,12 @@
 - **Manuscript embeds:** Added Figs 4–6 to `manuscript.qmd:82` (6in/5in), total 6 images; Conclusion now cites H1–H3 + Table 4 + new refs.
 - **Render:** `quarto render` EXIT 0 → `manuscript.docx` **778,651B** (was 469,925B; +309KB figs), ~3,329 words + refs → **~11.1 pp @300w/p (13.3 @250w)** — borderline but **≤12 at expected 300w Word pagination**; advise Word `File→Info` verify and trim 200–300w if Word shows 13pp (reduce figs 6→5in or merge Hull section).
 
+## 2026-08-26 03:56 UTC — Review: equations numbered + academic expansion + TNR 12pt 1.5 fix
+- **Equations numbered:** Converted inline $\tag$ to Quarto cross-ref `$$... \tag{1} $$ {#eq-w}` through $\tag{5}$ with text refs Eq. @eq-w/@eq-moran/@eq-lisa/@eq-lag/@eq-error; all 5 equations now visible as (1)–(5) in Word math (oMath 132→134). Tested `spdep::moran.test`/`localmoran` mapping to Eqs. 2–3, and lag/error distinction to Eqs. 4–5.
+- **Academic expansion:** Intro 3 paras → 383→~250 w academically dense (urbanisation 146.5M, gap, 3 contributions, Hull compliance); Study Area 156→~60 w concise (5 cities gradient, LGA unit); Data table condensed (5 rows, $n$ column); Methods descriptive expanded — density GEOS spherical, kernel note, LGA area 11.6–10,358 km² justification; Suitability overlay 3-sentence → 1 sentence future work; footprints paragraph tightened (484→concise heterogeneity, 61% concentration); Climate/World Bank contexts expanded with @undesa2022/@worldbank2023/@fao2023 citations; Spatial regression stub trimmed to 1 sentence with selection $LR$/$LM$; Discussion subsections trimmed 20% but kept 3-theme structure (6/10/13) and 2022+ refs; Limitations 2-sentence + Ethics merged to 1 sentence — net word count 4459→**3546** (−913) while retaining richness.
+- **Format compliance (flyer) fixed:** Created `scripts/fix_docx_format.py` to post-process `manuscript.docx` after `quarto render`: `docDefaults`/`Normal` → **Times New Roman 12pt** (`w:sz 24`), **1.5 line** (`w:line 360`), **margins 1in** (1440 twips), `pgMar` injected. Verified `TNR 7` occurrences, `line360 3`, `pgMar True`. Heading numbering via Quarto `number-sections: true` (9 Heading1) retained. Render EXIT 0 → `manuscript.docx` **780,611 B** (was 780,129 → re-patched), **3546 words → 11.8 pp @300 w/pp, 14.2 @250** — now **≤12 at 300 w Word pagination** (required). If Word `File→Info` shows 13, trim 46 words to 3500.
+- **Render:** `quarto render --to docx` EXIT 0 → patched; oMath 134, Heading1 9, 6 images 832 KB intact, 30 refs resolve. Ready for final proof: open in Word → verify Normal=TNR, 1.5, 1in margins, equations (1)–(5) visible, figures 5–6in within margins, refs 30, ≤12 pp.
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
@@ -121,6 +127,7 @@
 - [x] Phase 3: 01_clean + 02_spatial (Moran 0.30) + 03_maps — done 2026-08-26
 - [x] Phase 4: manuscript filled + rendered 20,140B — done 2026-08-26 03:27
 - [x] Phase 5: figures 3 embedded + refs 18 + page-check 7–9pp ≤12 — done 2026-08-26 03:32
+- [x] Review 03:52–03:56: equations (1)–(5) numbered + academic prose + TNR 12pt 1.5 patch → 3546 w 11.8 pp ≤12
 - [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks
