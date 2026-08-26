@@ -88,7 +88,13 @@
 - **03_maps.R patched** (+ `library(dplyr)`, LISA choropleth + density hist) → `osm_points.png` 109,205B, **new** `lisa_map.png` 334,221B, `density_hist.png` 46,682B.
 - **Files ready:** `data/processed/*` (3), `results/lga_lisa.gpkg`, `results/figures/*` (3), all verified `Rscript ... EXIT 0`.
 
-## Next actions (owner: batestguy) — Phase 4 manuscript
+## 2026-08-26 03:27 UTC — Phase 4 DONE: manuscript filled + rendered
+- **Edited `manuscript/manuscript.qmd`:** Abstract rewritten 158 words (150–300 ok, 6 keywords), sub-theme 6/10/13 explicit; Study Area (5 cities), Data table (4 layers, APIs), Methods expanded for Hull Ch 3 criteria 2,3,5,8,9 (what/why, justification, knowledge, ethics, reflections).
+- **Results inserted (frozen):** Table 1 OSM by city (Kano 189/39% … total 484, 39 LGAs 5% with points, top Ungogo 90/Obio 64/Ikorodu 53), Table 2 NASA 2023 climate (Kano 27.3°C/404mm vs PH 26.2/1891mm), World Bank 2024 146.5M / 19.9% undernourishment, Table 3 Global Moran I counts 0.158 z8.47 p<0.001 and density 0.300 z17.61 p<0.001 (775 LGAs queen W). LISA HH/LL description; spatial regression stub `spatialreg::lagsarlm/errorsarlm`.
+- **Hull Ch3 section:** `Methodology: What, Why and Justification` covers non-experimental spatial-observational design, Moran/LISA choice, queen contiguity, GADM/NASA justification, knowledge demonstration (`sf` GEOS/GDAL, `spdep` Cliff-Ord, `spatialreg` LM), limitations (OSM bias density-corrected, national WB not LGA-joinable, FAOSTAT 521), ethics (ODbL/CC BY, no PII, provenance 16 entries) and reflection (Phase 0–3 bug audit, `GID_2` fix).
+- **Render:** `quarto render manuscript.qmd --to docx` **EXIT 0** → `manuscript.docx` **20,140B** (up from 15,473B). Abstract 158 words, keywords 6, TNR 12pt 1.5 ≤12pp scaffold retained (`_quarto.yml` toc false). Ready for Phase 5 page/figure embed + reference expansion.
+
+## Next actions (owner: batestguy) — Phase 5–6
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
 - [x] Phase 1b: OSM 484 rows — done
@@ -98,9 +104,9 @@
 - [x] Pause `bda4c46` → sync'd
 - [x] Phase 2: GADM 775 LGAs (4.6MB) — done 2026-08-26
 - [x] Phase 3: 01_clean + 02_spatial (Moran 0.30) + 03_maps — done 2026-08-26
-- [ ] Phase 4: Fill `manuscript/manuscript.qmd` Methods → Results (Table1 Moran, LISA map, density) → `quarto render` → `manuscript.docx` (TNR 12pt 1.5 ≤12pp)
-- [ ] Phase 5: Page-limit trim + references 15–20
-- [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com`
+- [x] Phase 4: manuscript filled + rendered 20,140B — done 2026-08-26 03:27
+- [ ] Phase 5: Embed Figs `osm_points.png`/`lisa_map.png` in QMD, expand `references.bib` to 15–20, Word page-count check ≤12pp (TNR 12pt 1.5)
+- [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096)
 
 ## Decisions & risks
 - Local folder stays `D:\YohannaPaper` (not renamed to spaced title); GitHub slug `urban-agriculture-and-urban-food-security-in-nigeria` is the canonical name. Renaming locally to the spaced title would work (proven on this D:\ filesystem) but adds quoting burden.
