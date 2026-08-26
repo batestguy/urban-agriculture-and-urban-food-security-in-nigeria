@@ -19,9 +19,9 @@ format:
 
 # Introduction
 
-Urban agriculture in Nigerian cities — from dry-season fadama along riverbeds to rooftop and peri-urban allotments — is increasingly framed as a climate-smart lever for food security and community resilience [@faostat2024]. Yet the evidence remains fragmented.
+Urban agriculture in Nigerian cities — from dry-season fadama along riverbeds to rooftop and peri-urban allotments — is increasingly framed as a climate-smart lever for food security and community resilience [@orhevba2024; @faostat2024; @abubakar2023]. Nigerian urbanisation (146.5 million urban residents in 2024 [@worldbank2024]) outpaces formal food-system planning, making locally-mapped production capacity a policy need [@udoh2022; @frayne2014]. Yet the evidence remains fragmented and rarely spatialised [@aubry2012; @zezza2010].
 
-**Contribution:** This paper (i) freezes verifiable, API-sourced footprints of urban agriculture (OSM Overpass) and food-security indicators (World Bank/FAO/NASA POWER), (ii) applies spatial autocorrelation and spatial regression (`sf`/`spdep`/`terra` in R 4.5.2), and (iii) maps suitability for scaling.
+**Contribution:** This paper (i) freezes verifiable, API-sourced footprints of urban agriculture (OSM Overpass) and food-security indicators (World Bank/FAO/NASA POWER) [@openstreetmap2024; @worldbank2024; @nasapower2024], (ii) applies spatial autocorrelation and spatial regression (`sf`/`spdep`/`terra` in R 4.5.2) [@pebesma2018; @bivand2022; @anselin1995; @moran1950], and (iii) maps suitability for scaling [@hijmans2022].
 
 # Study Area and Data
 
@@ -79,7 +79,17 @@ All pulls are one-time and frozen to `data/raw/*.csv`. Analysis reads only the f
 
 *Source: OSM Overpass `data/raw/osm_urban_ag.csv` (484 rows), GADM 4.1 LGA join (`results/lga_lisa.gpkg`).*
 
-Figure 1 maps the 484 points; Figure 2 shows the LISA density clusters (high-high in Kano metropolis and Port Harcourt, low-low in surrounding savanna LGAs). Figure 3 is the density histogram (highly zero-inflated; mean 0.62 points per LGA, median 0).
+![Figure 1. Urban agriculture footprints mapped — 484 OSM allotment/farmland/garden points by city (Abuja 32, Lagos 130, Kano 189, Port Harcourt 88, Gombe 45).](../results/figures/osm_points.png){#fig-osm width=6in}
+
+Figure 1 shows the 484 points coloured by city; Kano's concentration in the Sahelian north is visually distinct.
+
+![Figure 2. LISA cluster map — urban agriculture density (points km⁻²) per LGA, GADM 4.1 775 LGAs, queen contiguity, p<0.05. HH (red) = high-high, LL (blue) = low-low, HL/LH outliers, grey = n.s.](../results/figures/lisa_map.png){#fig-lisa width=6in}
+
+Figure 2 is the LISA density choropleth. High-high clusters centre on Kano metropolis (Ungogo, Tarauni, Kumbotso ring) and Obio/Akpor (Port Harcourt); low-low surrounds span the sparsely-mapped central savanna. HL/LH outliers are rare (<10 LGAs).
+
+![Figure 3. Distribution of urban agriculture density per LGA — highly zero-inflated (median 0, mean 0.62 points/LGA, 39 LGAs 5% with >0 points; max 1.06 km⁻²).](../results/figures/density_hist.png){#fig-hist width=5.5in}
+
+Figure 3 confirms zero-inflation; density normalisation by `st_area` is therefore essential before spatial regression.
 
 ## Climate context (NASA POWER, 2023 daily)
 

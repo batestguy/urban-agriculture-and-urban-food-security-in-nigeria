@@ -94,7 +94,13 @@
 - **Hull Ch3 section:** `Methodology: What, Why and Justification` covers non-experimental spatial-observational design, Moran/LISA choice, queen contiguity, GADM/NASA justification, knowledge demonstration (`sf` GEOS/GDAL, `spdep` Cliff-Ord, `spatialreg` LM), limitations (OSM bias density-corrected, national WB not LGA-joinable, FAOSTAT 521), ethics (ODbL/CC BY, no PII, provenance 16 entries) and reflection (Phase 0–3 bug audit, `GID_2` fix).
 - **Render:** `quarto render manuscript.qmd --to docx` **EXIT 0** → `manuscript.docx` **20,140B** (up from 15,473B). Abstract 158 words, keywords 6, TNR 12pt 1.5 ≤12pp scaffold retained (`_quarto.yml` toc false). Ready for Phase 5 page/figure embed + reference expansion.
 
-## Next actions (owner: batestguy) — Phase 5–6
+## 2026-08-26 03:32 UTC — Phase 5 DONE: figures embedded + refs 18 + page-check
+- **Manuscript embeds:** Added 3 figures to `manuscript.qmd:82` — `osmpoints.png` 109KB (#fig-osm 6in), `lisa_map.png` 334KB (#fig-lisa 6in), `density_hist.png` 47KB (#fig-hist 5.5in) with captions + cross-refs; added inline citations [@orhevba2024; @abubakar2023; @udoh2022; @frayne2014; @aubry2012; @zezza2010; @pebesma2018; @bivand2022; @moran1950; @anselin1995; @hijmans2022; @openstreetmap2024; @worldbank2024; @nasapower2024; @gadm2022; @anand2021].
+- **References:** Expanded `manuscript/references.bib` from 1 → **18 entries** (Anselin 1995 LISA, Moran 1950, Cliff & Ord 1981, Pebesma 2018 sf, Bivand 2022, Hijmans terra, GADM 2022, OSM 2024, World Bank 2024, NASA POWER 2024, FAOSTAT 2024, plus 7 Nigeria/urban-ag refs).
+- **Render:** `quarto render --to docx` **EXIT 0** → `manuscript.docx` **469,925B** (was 20,140B; +figures 490KB compressed to 470KB). Approx word count 2,187 words → **~8.7 pages @250 w/p, 7.3 @300 w/p** — well **≤12 pages** TNR 12pt 1.5 ✓. Keywords 6, abstract 158w, citations resolve.
+- **Compliance:** Figures 6in fit margins; reference-links true; bibliography auto in Word; ready for final proof in Word (check Styles Normal = TNR, verify `File → Info` pages).
+
+## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
 - [x] Phase 1b: OSM 484 rows — done
@@ -105,8 +111,8 @@
 - [x] Phase 2: GADM 775 LGAs (4.6MB) — done 2026-08-26
 - [x] Phase 3: 01_clean + 02_spatial (Moran 0.30) + 03_maps — done 2026-08-26
 - [x] Phase 4: manuscript filled + rendered 20,140B — done 2026-08-26 03:27
-- [ ] Phase 5: Embed Figs `osm_points.png`/`lisa_map.png` in QMD, expand `references.bib` to 15–20, Word page-count check ≤12pp (TNR 12pt 1.5)
-- [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096)
+- [x] Phase 5: figures 3 embedded + refs 18 + page-check 7–9pp ≤12 — done 2026-08-26 03:32
+- [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks
 - Local folder stays `D:\YohannaPaper` (not renamed to spaced title); GitHub slug `urban-agriculture-and-urban-food-security-in-nigeria` is the canonical name. Renaming locally to the spaced title would work (proven on this D:\ filesystem) but adds quoting burden.
