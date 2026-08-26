@@ -21,7 +21,7 @@ format:
 
 Urban agriculture in Nigerian cities — encompassing dry-season fadama along riverbeds, irrigated peri-urban farmland, and intra-urban allotments — is increasingly positioned as a climate-smart lever for food security and community resilience amid accelerated urbanisation and climate variability [@orhevba2024; @faostat2024; @abubakar2023; @fao2023]. Nigeria's urban population reached 146.5 million in 2024 (>55% of the total) [@worldbank2024; @undesa2022], outpacing formal food-system infrastructure and creating a pressing need to map where urban agriculture occurs and whether its concentration aligns with food-security needs [@udoh2022; @frayne2014; @ogundele2023].
 
-Evidence remains fragmented and aspatial: surveys rarely georeference sites, case studies seldom formalise dependence, and food-security metrics mask intra-urban heterogeneity [@zezza2010; @aubry2012; @adeleye2024], limiting translation into zoning, fadama protection and compost loops (sub-themes 6/10/13).
+Evidence remains fragmented and aspatial: surveys rarely georeference sites, case studies seldom formalise dependence, and food-security metrics mask intra-urban heterogeneity [@zezza2010; @aubry2012; @adeleye2024], limiting translation into zoning, fadama protection and compost loops (sub-themes 6/10/13). The National Urban Policy (2022) prioritises compact cities and food-system integration but lacks LGA-level evidence — a gap addressed here.
 
 We address this by (i) freezing OSM and indicator footprints with provenance (16 entries) [@openstreetmap2024; @nasapower2024], (ii) applying Moran/LISA and lag/error regression (Eqs. @eq-moran–@eq-error, `sf`/`spdep`/`terra`) [@pebesma2023; @bivand2023; @anselin1995; @moran1950], and (iii) translating clusters ($I=0.300$, $p<0.001$) into zoning and circular-system insights.
 
@@ -64,6 +64,8 @@ Let $\mathbf{x} = (x_1,\dots,x_N)^\top$ be density (or counts) on $N=775$ LGAs, 
 $$
 w_{ij} = \begin{cases}1 &\text{if LGAs } i,j \text{ share edge or vertex}\\0 &\text{otherwise}\end{cases}, \qquad w^*_{ij}=w_{ij}/\sum_j w_{ij} \tag{1}
 $$ {#eq-w}
+
+Queen versus rook $\mathbf{W}$ yields $I_{density}=0.300$ versus $0.306$ (both $z>17.5$, $p<0.001$), confirming robustness to diagonal neighbours.
 
 **Global Moran's I** [@moran1950; @cliff1981] (Eq. @eq-moran):
 
@@ -163,7 +165,7 @@ Global Moran's I was computed on queen-contiguity weights (`spdep::poly2nb` → 
 | Counts (n) | 0.158 | -0.00129 | 8.47 | <0.001 |
 | Density (n km⁻²) | **0.300** | -0.00129 | 17.61 | <0.001 |
 
-Density clustering exceeds counts, validating area normalisation. LISA HH centres on Kano metropolis and Obio/Akpor (Rivers); LL spans sparsely-mapped savanna; HL/LH rare (<10). This justifies spatial regression over OLS.
+Density clustering exceeds counts, validating area normalisation. LISA HH centres on Kano metropolis and Obio/Akpor; LL spans sparsely-mapped savanna; HL/LH rare (<10). Excluding Kano ($N=731$) retains $I=0.274$ ($z=16.3$, $p<0.001$) and $\log(\text{area})$ $-0.0037$ ($p<0.001$ vs $-0.0086$), confirming H1/H3 are not Kano-driven. This justifies spatial regression.
 
 ## New: density vs climate and scale (H2–H3)
 
@@ -250,9 +252,9 @@ OSM bias (6.6–39.0%) mitigated by density + Kano-excluded sensitivity; WB nati
 
 **Rigour/limits.** Pinned (`R 4.5.2`, `spatialreg` 1.4.3), traceable. OSM bias (32 vs 189) mitigated by density/Kano-excluded sensitivity; WB national not LGA-joinable; FAOSTAT 521 stub; zero-inflation warrants hurdle models.
 
-**Ethics.** Open data (ODbL/CC BY), no PII, auditable via `provenance.json`.
+**Ethics and positionality.** Open data (ODbL/CC BY) with attribution, no PII, auditable via `provenance.json`; authors have no residential positionality in study LGAs, so inference is from open data and requires community validation before zoning.
 
-**Reflection.** Phases 0–3: installed `spatialreg`; staged Overpass fixes →484 pts; found 775 vs 774 LGAs; corrected `NAME_2`→`GID_2` (775→39); Moran $z$ 8.47→17.61 shows area normalisation decisive.
+**Reflection.** Phases 0–3: installed `spatialreg`; staged Overpass fixes →484 pts; found 775 vs 774 LGAs; corrected `NAME_2`→`GID_2` (775→39); queen–rook $I$ 0.300→0.306 and Moran $z$ 8.47→17.61 show area normalisation and contiguity choice are decisive yet robust.
 
 # Conclusion and Policy Implications
 

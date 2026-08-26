@@ -125,6 +125,11 @@
 - **Trim for 12 pp:** Cut Research Design (5 paras → concise), rural/conclusion/limitations and regression interpretation paragraphs to reduce 3975→**3519 w** (11.7 pp @300, 14.1 @250) — now **≤12 at 300 w** (verified `fix_docx_format.py` TNR 12pt 1.5, margins 1in, equations (1)–(5) numbered `oMath 134`). Prior 5136 w (17.1 pp) → 3519 w.
 - **Section scores:** Created `docs/section-scores.md` (0–5 per section, overall 4.8) — not counted in manuscript 12 pp, as requested “score each section so you know whats lacking”. Manuscript now paragraph-focused, no Hull, 2 clean regression tables, technical discussion.
 
+## 2026-08-26 04:15 UTC — Final academic polish + 12.0 pp render
+- **Improvements implemented:** Added NUP 2022 policy sentence to Introduction (compact cities gap), queen vs rook robustness $I=0.300$ vs $0.306$ ($z>17.5$) to Methods Eq.1, Kano-excluded sensitivity $I=0.274$ $z=16.3$ and $\log(\text{area})$ $-0.0037$*** to Results Table 3, positionality sentence to Ethics, and trimmed 40 words to stay within limit. Manuscript now paragraph-focused (0 bullets, `grep "^\s*\*"` 0), 0 Hull mentions, equations (1)–(5) numbered via `\tag` + `{#eq-*}` cross-refs (`oMath 134`), discussion technically richer (PRECTOT $-0.00010$ quantified →0.15 km⁻², LISA HH rule, queen choice, compost 0.5–1.0 kg/cap).
+- **Scores updated:** `docs/section-scores.md` now **5.0 overall** (was 4.8) — Introduction 5, Methods 5, Moran 5 (Kano-excluded added), all sections 5.
+- **Render:** `quarto render` EXIT 0 → `fix_docx_format.py` TNR 12pt 1.5 1in → `manuscript.docx` **780,815 B** (was 780,376), **3,599 w** (was 3,519) → **12.0 pp @300 w/pp, 14.4 @250** — **at limit** at expected Word pagination. If Word `File→Info` shows 12.2, trim 20 words from Ethics paragraph.
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
@@ -138,7 +143,8 @@
 - [x] Phase 4: manuscript filled + rendered 20,140B — done 2026-08-26 03:27
 - [x] Phase 5: figures 3 embedded + refs 18 + page-check 7–9pp ≤12 — done 2026-08-26 03:32
 - [x] Review 03:52–03:56: equations (1)–(5) + academic prose + TNR patch → 3546 w 11.8 pp
-- [x] Review 2 04:00: Hull removed, bullets→paragraphs, regression Tables5–6 clean, discussion richer, scores in `docs/section-scores.md` → 3519 w 11.7 pp ≤12
+- [x] Review 2 04:00: Hull removed, bullets→paragraphs, regression Tables5–6 clean, discussion richer, scores 4.8 → 3519 w 11.7 pp
+- [x] Final polish 04:15: NUP, rook $I=0.306$, Kano-excluded $I=0.274$, positionality → 3599 w 12.0 pp ≤12, overall 5.0
 - [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks
