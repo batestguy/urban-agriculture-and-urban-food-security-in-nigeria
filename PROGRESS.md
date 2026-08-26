@@ -115,6 +115,16 @@
 - **Format compliance (flyer) fixed:** Created `scripts/fix_docx_format.py` to post-process `manuscript.docx` after `quarto render`: `docDefaults`/`Normal` → **Times New Roman 12pt** (`w:sz 24`), **1.5 line** (`w:line 360`), **margins 1in** (1440 twips), `pgMar` injected. Verified `TNR 7` occurrences, `line360 3`, `pgMar True`. Heading numbering via Quarto `number-sections: true` (9 Heading1) retained. Render EXIT 0 → `manuscript.docx` **780,611 B** (was 780,129 → re-patched), **3546 words → 11.8 pp @300 w/pp, 14.2 @250** — now **≤12 at 300 w Word pagination** (required). If Word `File→Info` shows 13, trim 46 words to 3500.
 - **Render:** `quarto render --to docx` EXIT 0 → patched; oMath 134, Heading1 9, 6 images 832 KB intact, 30 refs resolve. Ready for final proof: open in Word → verify Normal=TNR, 1.5, 1in margins, equations (1)–(5) visible, figures 5–6in within margins, refs 30, ≤12 pp.
 
+## 2026-08-26 04:00 UTC — Review 2: remove Hull, bullets→paragraphs, clean regression, richer technical discussion, section scores
+- **Hull removed:** Deleted all “Hull Chapter 3” mentions from `manuscript.qmd:26` (Intro), `qmd:245` header + `qmd:245` Ethics sentence; renamed *Methodology: What, Why… (Hull…)* → *Research Design, Justification and Critical Reflection* (paragraph form, no Hull, no bullets). Conference-appropriate language now.
+- **Bullets → paragraphs:** Converted H1–H3 bullet list (3 items) to single paragraph “We test three hypotheses. H1 posits…; H2…; H3…” (`qmd:50`); converted H2–H3 3-bullet Spearman list to paragraph; verified `grep "^\s*\*"` =0 bullets (was 3), `grep Hull` =0.
+- **Regression clean results:** Ran `analysis/spatial/run_regression.R` (775 LGAs and 34 climate LGAs) → Tables 5–6 now with **actual estimates**:
+  - *Table 5 N=775* `density~log(area)`: OLS log -0.0086 (0.0014)*** AIC -2485.2 $R^2$0.048; Lag $\rho=0.419$ (0.046)*** log -0.0052 (0.0013)*** AIC **-2577.5** LR94.3***; Error $\lambda=0.419$ log -0.0058*** AIC -2572.9. Lag preferred ($\Delta$ -4.6).
+  - *Table 6 N=34* `density~log(area)+PRECTOT+T2M`: OLS PRECTOT -0.000085 n.s.; Lag PRECTOT -0.000135 (0.000064)* $p=0.035$ $\rho=-0.438$* ; Error PRECTOT -0.00010 (0.000042)* $p=0.018$ $\lambda=-0.476$** AIC **-12.75** (best) — PRECTOT becomes significant after spatial correction, supporting H2 (drier→denser, 1,487 mm contrast →0.15 km⁻², 15% Tarauni).
+- **Discussion richer technical+explanatory:** Climate-smart expanded with Table 6 quantification (−0.00010 →0.15 km⁻²) and FAO framing; GIS expanded with LISA HH rule, queen $\mathbf{W}$ justification, selective zoning and Ikorodu dilution; circular expanded with compost tonnage 0.5–1.0 kg/cap/day and `terra` prioritisation; rural bridge kept concise. All 2022+ refs retained.
+- **Trim for 12 pp:** Cut Research Design (5 paras → concise), rural/conclusion/limitations and regression interpretation paragraphs to reduce 3975→**3519 w** (11.7 pp @300, 14.1 @250) — now **≤12 at 300 w** (verified `fix_docx_format.py` TNR 12pt 1.5, margins 1in, equations (1)–(5) numbered `oMath 134`). Prior 5136 w (17.1 pp) → 3519 w.
+- **Section scores:** Created `docs/section-scores.md` (0–5 per section, overall 4.8) — not counted in manuscript 12 pp, as requested “score each section so you know whats lacking”. Manuscript now paragraph-focused, no Hull, 2 clean regression tables, technical discussion.
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
@@ -127,7 +137,8 @@
 - [x] Phase 3: 01_clean + 02_spatial (Moran 0.30) + 03_maps — done 2026-08-26
 - [x] Phase 4: manuscript filled + rendered 20,140B — done 2026-08-26 03:27
 - [x] Phase 5: figures 3 embedded + refs 18 + page-check 7–9pp ≤12 — done 2026-08-26 03:32
-- [x] Review 03:52–03:56: equations (1)–(5) numbered + academic prose + TNR 12pt 1.5 patch → 3546 w 11.8 pp ≤12
+- [x] Review 03:52–03:56: equations (1)–(5) + academic prose + TNR patch → 3546 w 11.8 pp
+- [x] Review 2 04:00: Hull removed, bullets→paragraphs, regression Tables5–6 clean, discussion richer, scores in `docs/section-scores.md` → 3519 w 11.7 pp ≤12
 - [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com` (fee First Bank 2047116096) — final Word proof + email
 
 ## Decisions & risks
