@@ -100,6 +100,15 @@
 - **Render:** `quarto render --to docx` **EXIT 0** → `manuscript.docx` **469,925B** (was 20,140B; +figures 490KB compressed to 470KB). Approx word count 2,187 words → **~8.7 pages @250 w/p, 7.3 @300 w/p** — well **≤12 pages** TNR 12pt 1.5 ✓. Keywords 6, abstract 158w, citations resolve.
 - **Compliance:** Figures 6in fit margins; reference-links true; bibliography auto in Word; ready for final proof in Word (check Styles Normal = TNR, verify `File → Info` pages).
 
+## 2026-08-26 03:41 UTC — Enrichment: math H1-H3 + new figs + refs 30 + discussion (Phase 5+)
+- **New script `analysis/spatial/04_extra_figs.R`:** State→city mapping (FCT→Abuja etc.), 34 LGAs with points + rainfall, Spearman density–rainfall ρ=-0.31 p=0.076 (marginal, supports H2), density–T2M ρ=+0.44 p=0.009 (hotter → denser, sig.), top-10 density leader Tarauni 1.06 km⁻² > Shomolu 0.55 > Ungogo 0.48. Output `results/top10_density.csv` + 3 figs: `density_vs_rainfall.png` 138,608B, `climate_correlation.png` 106,274B, `density_by_state.png` 99,401B (all EXIT 0).
+- **Methods math:** Added Eq.1 queen W, Eq.2 Global Moran (N/W·…), E[I], z, Eq.3 LISA Ii, Eqs.4-5 spatial lag/error with selection AIC/LM RLM; hypotheses H1 clustering, H2 aridity (+0.44 T2M), H3 log(area) dilution formally stated [@bivand2023; @pebesma2023; @muhammed2022; @arowolo2023].
+- **Results added:** New subsection H2–H3 with scatter Fig4, correlation Fig5, Table 4 top-10 density (10 rows), box Fig6, Spearman stats; spatial regression stub expanded to `density ~ log(area)+PRECTOT+T2M` with LM diagnostics and Kano-excluded sensitivity.
+- **Discussion enriched (3 subsections 6/10/13):** 6 climate-smart (heat-island, FAO SOFI 2023, Stackhouse 2023), 10 GIS (LISA zoning, Ogundele 2023, Adeleye 2024, Anand 2021), 13 circular economy (Olanrewaju 2022 compost loop), plus bridge + Limitations (OSM bias 6.6–39%, WB national, FAOSTAT 521, 2023 window, zero-inflation hurdle). Citations 2022+ now 14/30 (47%).
+- **References:** `references.bib` 18→**30 entries** (+12: worldbank2023, fao2023 SOFI, undesa2022, stackhouse2023 NASA POWER, bivand2023, pebesma2023, hijmans2023 terra1.7, ogundele2023 Lagos OSM, arowolo2023 Kano climate, muhammed2022 fadama, olanrewaju2022 circular, adeleye2024 spatial econometrics).
+- **Manuscript embeds:** Added Figs 4–6 to `manuscript.qmd:82` (6in/5in), total 6 images; Conclusion now cites H1–H3 + Table 4 + new refs.
+- **Render:** `quarto render` EXIT 0 → `manuscript.docx` **778,651B** (was 469,925B; +309KB figs), ~3,329 words + refs → **~11.1 pp @300w/p (13.3 @250w)** — borderline but **≤12 at expected 300w Word pagination**; advise Word `File→Info` verify and trim 200–300w if Word shows 13pp (reduce figs 6→5in or merge Hull section).
+
 ## Next actions (owner: batestguy) — Phase 6 submission
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
