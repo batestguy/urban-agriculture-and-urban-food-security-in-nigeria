@@ -72,16 +72,35 @@
   4. **Phase 4:** Fill `manuscript/manuscript.qmd` Methods → Results (see `docs/phases.md` order) → `quarto render` → `manuscript/manuscript.docx` (TNR 12pt 1.5 ≤12pp).
 - **To resume quickly:** `conda activate C:\Users\TOSHIBA\ds-general` + `Rscript --version` + `quarto check` — all verified 2026-08-25. See `docs/phases.md:Phase 2` for copy-paste commands. `README.md:5` progress in sync.
 
-## Next actions (owner: batestguy) — Phase 2 → 3 (pause)
+## 2026-08-26 03:19 UTC — Phase 2 DONE: GADM LGA shapefile + provenance
+- **Fetched:** `https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_NGA_shp.zip` (3,465,524B) → extracted `gadm41_NGA_2.shp` **4,561,168B** + `.dbf` 134,525B + `.shx` + `.cpg/.prj` (kept `GADM_2` only, deleted `NGA_0/1` 6MB). Total external ~4.7MB (<50MB → committed).
+- **Verify:** `Rscript st_read` → 775 LGAs, 14 cols (`GID_2, GID_0, COUNTRY, GID_1, NAME_1, NAME_2 ...`), CRS `EPSG:4326`, `st_is_valid` 775/775, size 5.1MB.
+- **Provenance:** Appended GADM entry 16th to `data/raw/provenance.json` (CC BY 4.0, URL/logged).
+
+## 2026-08-26 03:19 UTC — Phase 3 DONE: clean + spatial stats + maps
+- **01_clean.R patched** (+ NASA annual aggregation) → `osm_urban_ag.gpkg` 163,840B, `worldbank_ng_wide.csv` 668B, **new** `nasa_annual.csv` 323B:
+  `abuja t2m 25.9°C prec 1031mm rh70.1%`, `gombe 27.1/862/53.4`, `kano 27.3/404/42.1`, `lagos 26.8/1726/85.4`, `port_harcourt 26.2/1891/87.7` (365d each, 2023).
+- **02_spatial_stats.R patched** (join by `GID_2`, filter `!is.na(city)`, density `n/area_km2`, LISA quadrants, dual Moran):
+  - `Moran I (counts)` = **0.158** z=8.47 p<2.2e-16; `Moran I (density)` = **0.300** z=17.61 p<2.2e-16 — **strong spatial clustering** of urban agriculture.
+  - LGAs with UA: **39/775 (5.0%)**, max `Ungogo (Kano) n=90`, `Obio/Akpor n=64`, `Ikorodu n=53`, `Akko (Gombe) n=45` — matches OSM city totals (Kano 189 dominates). `max density 1.06/km2`.
+  - Fixed bug: earlier `count(NAME_2)` counted NA LGAs as 775 → now `count(GID_2)` after filter → 39 true.
+  - Output: `results/lga_lisa.gpkg` 5,390,336B with cols `n, area_km2, density, lisa_I, lisa_p, lisa_I_n, lisa_p_n, lag_density, lisa_quad (HH/LL/HL/LH)`.
+- **03_maps.R patched** (+ `library(dplyr)`, LISA choropleth + density hist) → `osm_points.png` 109,205B, **new** `lisa_map.png` 334,221B, `density_hist.png` 46,682B.
+- **Files ready:** `data/processed/*` (3), `results/lga_lisa.gpkg`, `results/figures/*` (3), all verified `Rscript ... EXIT 0`.
+
+## Next actions (owner: batestguy) — Phase 4 manuscript
 - [x] Phase 0: verify done
 - [x] Phase 1a: worldbank — done
 - [x] Phase 1b: OSM 484 rows — done
 - [x] Phase 1c: NASA POWER 5×365 — done
 - [x] Phase 1d: FAO stub — done
-- [x] Fix auth: classic PAT `ghp` → `gh auth login --with-token` → `git push` OK (2026-08-25 08:50)
-- [x] Pause commit `99a44ef` → `origin/master` sync'd — ready to continue next time
-- [ ] Phase 2: Download `data/external/gadm41_NGA_2.shp` (LGA polygons, ~100MB) — see `data/external/README.md` — **do NOT commit if >50MB**, add to `.gitignore`, keep locally
-- [ ] Phase 3: `Rscript analysis/spatial/01_clean.R → data/processed/osm_urban_ag.gpkg + worldbank_ng_wide.csv`
+- [x] Fix auth: classic PAT `ghp` → `gh push` OK
+- [x] Pause `bda4c46` → sync'd
+- [x] Phase 2: GADM 775 LGAs (4.6MB) — done 2026-08-26
+- [x] Phase 3: 01_clean + 02_spatial (Moran 0.30) + 03_maps — done 2026-08-26
+- [ ] Phase 4: Fill `manuscript/manuscript.qmd` Methods → Results (Table1 Moran, LISA map, density) → `quarto render` → `manuscript.docx` (TNR 12pt 1.5 ≤12pp)
+- [ ] Phase 5: Page-limit trim + references 15–20
+- [ ] Phase 6: Submit abstract 5 Oct / full paper 9 Oct to `fpksstconf2026@gmail.com`
 
 ## Decisions & risks
 - Local folder stays `D:\YohannaPaper` (not renamed to spaced title); GitHub slug `urban-agriculture-and-urban-food-security-in-nigeria` is the canonical name. Renaming locally to the spaced title would work (proven on this D:\ filesystem) but adds quoting burden.

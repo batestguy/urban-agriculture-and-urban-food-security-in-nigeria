@@ -177,5 +177,19 @@
     "status": "http_521_stub",
     "out": "D:\\YohannaPaper\\data\\raw\\fao_food_security.csv",
     "timestamp_utc": "2026-08-25T07:40:41.766963+00:00"
+  },
+  {
+    "source": "GADM 4.1",
+    "url": "https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_NGA_shp.zip",
+    "layers": [
+      "gadm41_NGA_0",
+      "gadm41_NGA_1",
+      "gadm41_NGA_2"
+    ],
+    "lga_n": 775,
+    "crs": "EPSG:4326",
+    "out": "data/external/gadm41_NGA_2.shp",
+    "license": "CC BY 4.0 (GADM)",
+    "timestamp_utc": "2026-08-26T02:18:59.427240+00:00"
   }
 ]

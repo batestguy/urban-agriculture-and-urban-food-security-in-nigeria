@@ -24,4 +24,32 @@ if (file.exists(raw_wb)) {
   write_csv(wb_wide, "data/processed/worldbank_ng_wide.csv")
   cat("Wrote data/processed/worldbank_ng_wide.csv\n")
 }
+
+# NASA POWER annual means (T2M, PRECTOTCORR, RH2M) — 5 cities
+nasa_files <- Sys.glob("data/raw/nasa_power_*.csv")
+if (length(nasa_files) > 0) {
+  nasa_list <- lapply(nasa_files, function(f) {
+    city <- sub(".*nasa_power_(.*)\\.csv", "\\1", basename(f))
+    df <- read_csv(f, show_col_types=FALSE)
+    # columns vary: date, T2M, PRECTOTCORR, RH2M or lower-case
+    names(df) <- tolower(names(df))
+    # standardise
+    df$city <- city
+    df
+  })
+  nasa_all <- dplyr::bind_rows(nasa_list)
+  # annual summary 2023 window
+  nasa_annual <- nasa_all %>%
+    group_by(city) %>%
+    summarise(
+      n_days = n(),
+      t2m_mean = mean(t2m, na.rm=TRUE),
+      prectot_sum = sum(prectotcorr, na.rm=TRUE),
+      rh2m_mean = mean(rh2m, na.rm=TRUE),
+      .groups="drop"
+    )
+  write_csv(nasa_annual, "data/processed/nasa_annual.csv")
+  cat("Wrote data/processed/nasa_annual.csv\n")
+  print(nasa_annual)
+}
 cat("01_clean.R done\n")
